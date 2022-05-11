@@ -1,0 +1,60 @@
+/* File operations.
+*/
+module interface std/os/file
+ 
+//------------------------------
+//#kki: import declarations
+ 
+import std/core/types = std/core/types = "";
+import std/core/hnd = std/core/hnd = "";
+import std/core = std/core = "";
+import std/os/path = std/os/path = "";
+import std/os/dir = std/os/dir = "";
+ 
+//------------------------------
+//#kki: external imports
+ 
+ 
+//------------------------------
+//#kki: fixity declarations
+ 
+ 
+//------------------------------
+//#kki: local imported aliases
+ 
+ 
+//------------------------------
+//#kki: type declarations
+ 
+ 
+//------------------------------
+//#kki: declarations
+ 
+fun prepend : (exn : std/core/exception, pre : std/core/types/string) -> std/core/exception;
+fun read-text-file-err : (path : std/core/types/string) -> <(std/core/fsys :: X)> (std/core/error :: V -> V)<std/core/types/string>;
+fun write-text-file-err : (path : std/core/types/string, content : std/core/types/string) -> <(std/core/fsys :: X)> (std/core/error :: V -> V)<()>;
+// Read a text file synchronously (using UTF8 encoding)
+pub fun read-text-file : (path : std/os/path/path) -> <(std/core/types/handled :: HX -> X)<(std/core/exn :: HX)>,(std/core/fsys :: X)> std/core/types/string;
+// monadic lift
+fun .mlift256-write-text-file : (content : std/core/types/string, path : std/os/path/path, .c.230 : ()) -> ();
+// Write a text file synchronously (using UTF8 encoding)
+pub fun write-text-file : (path : std/os/path/path, content : std/core/types/string, create-dir : (std/core/types/optional :: V -> V)<std/core/types/bool>) -> <(std/core/types/handled :: HX -> X)<(std/core/exn :: HX)>,(std/core/fsys :: X)> ();
+ 
+//------------------------------
+//#kki: external declarations
+ 
+ 
+//------------------------------
+//#kki: inline definitions
+ 
+//.inline-section
+fun prepend // inline size: 3
+  = fn(exn: std/core/exception, pre: std/core/types/string){
+    std/core/Exception((std/core/(++.1)(pre, (std/core/(++.1)(": ", (match (exn) {
+            ((.skip std/core/Exception((.x: std/core/types/string) : std/core/types/string, (.pat0: std/core/exception-info) : std/core/exception-info) : std/core/exception ) as .pat: std/core/exception)
+               -> .x;
+          }))))), (match (exn) {
+        ((.skip std/core/Exception((.pat00: std/core/types/string) : std/core/types/string, (.x0: std/core/exception-info) : std/core/exception-info) : std/core/exception ) as .pat1: std/core/exception)
+           -> .x0;
+      }));
+  };

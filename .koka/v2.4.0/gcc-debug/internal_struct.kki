@@ -1,0 +1,299 @@
+module interface internal/struct
+ 
+//------------------------------
+//#kki: import declarations
+ 
+import std/core/types = std/core/types = "";
+import std/core/hnd = std/core/hnd = "";
+import std/core = std/core = "";
+ 
+//------------------------------
+//#kki: external imports
+ 
+ 
+//------------------------------
+//#kki: fixity declarations
+ 
+ 
+//------------------------------
+//#kki: local imported aliases
+ 
+// An alias for pure effects: a pure function always returns the same result
+// when called with the same arguments but may not terminate or raise an exception.
+local alias std/core/pure :: E = <(std/core/types/handled :: HX -> X)<(std/core/exn :: HX)>,(std/core/types/div :: X)> = 1;
+// An alias for the empty effect.
+local alias std/core/total :: E = (std/core/types/(<>) :: E) = 1;
+ 
+//------------------------------
+//#kki: type declarations
+ 
+pub recursive type patern {
+  pub con Ident(name: std/core/types/string) : (name : std/core/types/string) -> patern;
+  pub con NullPat : patern;
+  pub con Patpair(p1: patern, p2: patern) : (p1 : patern, p2 : patern) -> patern;
+};
+pub recursive type expression {
+  pub con Num(n: std/core/types/int) : (n : std/core/types/int) -> expression;
+  pub con EFalse : expression;
+  pub con ETrue : expression;
+  pub con Variable(name: std/core/types/string) : (name : std/core/types/string) -> expression;
+  pub con Lambda(arg: patern, body: expression) : (arg : patern, body : expression) -> expression;
+  pub con If(cond: expression, thus: expression, otherwise: expression) : (cond : expression, thus : expression, otherwise : expression) -> expression;
+  pub con MLpair(e1: expression, e2: expression) : (e1 : expression, e2 : expression) -> expression;
+  pub con Apply(e1: expression, e2: expression) : (e1 : expression, e2 : expression) -> expression;
+  pub con Let(arg: patern, arg_val: expression, body: expression) : (arg : patern, arg_val : expression, body : expression) -> expression;
+  pub con Letrec(arg: patern, arg_val: expression, body: expression) : (arg : patern, arg_val : expression, body : expression) -> expression;
+};
+// handlers for the `:scope` effect
+pub recursive type .hnd-scope <(e :: E),a> :: (E, V) -> V {
+  pub con .Hnd-scope(fun-add: (std/core/hnd/clause2 :: (V, V, V, (E, V) -> V, E, V) -> V)<std/core/types/string,expression,(),(.hnd-scope :: (E, V) -> V),(e :: E),a>, fun-get: (std/core/hnd/clause1 :: (V, V, (E, V) -> V, E, V) -> V)<std/core/types/string,(std/core/types/maybe :: V -> V)<expression>,(.hnd-scope :: (E, V) -> V),(e :: E),a>) : forall<(e :: E),a> (fun-add : (std/core/hnd/clause2 :: (V, V, V, (E, V) -> V, E, V) -> V)<std/core/types/string,expression,(),(.hnd-scope :: (E, V) -> V),(e :: E),a>, fun-get : (std/core/hnd/clause1 :: (V, V, (E, V) -> V, E, V) -> V)<std/core/types/string,(std/core/types/maybe :: V -> V)<expression>,(.hnd-scope :: (E, V) -> V),(e :: E),a>) -> (.hnd-scope :: (E, V) -> V)<(e :: E),a>;
+};
+pub value{0,1} type result {
+  pub con Value(exp: expression) : (exp : expression) -> result;
+  pub con ResultError(s: std/core/types/string) : (s : std/core/types/string) -> result;
+};
+// `:scope` effect
+pub type scope :: HX {
+  con Scope<(e :: E),a>((.hnd-scope :: (E, V) -> V)<(e :: E),a>) : forall<(e :: E),a> ((.hnd-scope :: (E, V) -> V)<(e :: E),a>) -> (scope :: HX);
+};
+ 
+//------------------------------
+//#kki: declarations
+ 
+// Automatically generated. Tests for the `Ident` constructor of the `:patern` type.
+pub fun is-ident : (^ patern : patern) -> std/core/types/bool;
+// Automatically generated. Tests for the `NullPat` constructor of the `:patern` type.
+pub fun is-nullPat : (^ patern : patern) -> std/core/types/bool;
+// Automatically generated. Tests for the `Patpair` constructor of the `:patern` type.
+pub fun is-patpair : (^ patern : patern) -> std/core/types/bool;
+// Automatically generated. Tests for the `Num` constructor of the `:expression` type.
+pub fun is-num : (^ expression : expression) -> std/core/types/bool;
+// Automatically generated. Tests for the `EFalse` constructor of the `:expression` type.
+pub fun is-efalse : (^ expression : expression) -> std/core/types/bool;
+// Automatically generated. Tests for the `ETrue` constructor of the `:expression` type.
+pub fun is-etrue : (^ expression : expression) -> std/core/types/bool;
+// Automatically generated. Tests for the `Variable` constructor of the `:expression` type.
+pub fun is-variable : (^ expression : expression) -> std/core/types/bool;
+// Automatically generated. Tests for the `Lambda` constructor of the `:expression` type.
+pub fun is-lambda : (^ expression : expression) -> std/core/types/bool;
+// Automatically generated. Tests for the `If` constructor of the `:expression` type.
+pub fun is-if : (^ expression : expression) -> std/core/types/bool;
+// Automatically generated. Tests for the `MLpair` constructor of the `:expression` type.
+pub fun is-mlpair : (^ expression : expression) -> std/core/types/bool;
+// Automatically generated. Tests for the `Apply` constructor of the `:expression` type.
+pub fun is-apply : (^ expression : expression) -> std/core/types/bool;
+// Automatically generated. Tests for the `Let` constructor of the `:expression` type.
+pub fun is-let : (^ expression : expression) -> std/core/types/bool;
+// Automatically generated. Tests for the `Letrec` constructor of the `:expression` type.
+pub fun is-letrec : (^ expression : expression) -> std/core/types/bool;
+// Automatically generated. Tests for the `Value` constructor of the `:result` type.
+pub fun is-value : (^ result : result) -> std/core/types/bool;
+// Automatically generated. Tests for the `ResultError` constructor of the `:result` type.
+pub fun is-resultError : (^ result : result) -> std/core/types/bool;
+// runtime tag for the `:scope` effect
+pub val .tag-scope : (std/core/hnd/htag :: ((E, V) -> V) -> V)<(.hnd-scope :: (E, V) -> V)>;
+// handler for the `:scope` effect
+pub fun .handle-scope : forall<a,(e :: E),b> (cfc : std/core/types/int32, hnd : (.hnd-scope :: (E, V) -> V)<(e :: E),b>, ret : (res : a) -> (e :: E) b, action : () -> <(std/core/types/handled :: HX -> X)<(scope :: HX)>|(e :: E)> a) -> (e :: E) b;
+// select `get` operation out of the `:scope` effect handler
+pub fun .select-get : forall<(e :: E),a> (^ hnd : (.hnd-scope :: (E, V) -> V)<(e :: E),a>) -> (std/core/hnd/clause1 :: (V, V, (E, V) -> V, E, V) -> V)<std/core/types/string,(std/core/types/maybe :: V -> V)<expression>,(.hnd-scope :: (E, V) -> V),(e :: E),a>;
+// select `add` operation out of the `:scope` effect handler
+pub fun .select-add : forall<(e :: E),a> (^ hnd : (.hnd-scope :: (E, V) -> V)<(e :: E),a>) -> (std/core/hnd/clause2 :: (V, V, V, (E, V) -> V, E, V) -> V)<std/core/types/string,expression,(),(.hnd-scope :: (E, V) -> V),(e :: E),a>;
+// call `get` operation of the `:scope` effect
+pub fun get : (name : std/core/types/string) -> <(std/core/types/handled :: HX -> X)<(scope :: HX)>> (std/core/types/maybe :: V -> V)<expression>;
+pub fun show : (pat : patern) -> (std/core/total :: E) std/core/types/string;
+pub fun show.1 : (exp : expression) -> (std/core/total :: E) std/core/types/string;
+// monadic lift
+fun .mlift2535-linter : (name : std/core/types/string, .y.2503 : (std/core/types/maybe :: V -> V)<expression>) -> <(std/core/types/handled :: HX -> X)<(scope :: HX)>,(std/core/console :: X),(std/core/types/div :: X),(std/core/types/handled :: HX -> X)<(std/core/exn :: HX)>> result;
+// monadic lift
+fun .mlift2536-linter : (arg : patern, .y.2506 : result) -> <(std/core/types/div :: X),(std/core/types/handled :: HX -> X)<(std/core/exn :: HX)>,(std/core/types/handled :: HX -> X)<(scope :: HX)>,(std/core/console :: X)> result;
+// monadic lift
+fun .mlift2537-linter : (otherwise : expression, thus : expression, .y.2507 : result) -> <(std/core/types/div :: X),(std/core/types/handled :: HX -> X)<(std/core/exn :: HX)>,(std/core/types/handled :: HX -> X)<(scope :: HX)>,(std/core/console :: X)> result;
+// monadic lift
+fun .mlift2538-linter : (nv1 : expression, .y.2512 : result) -> <(std/core/types/div :: X),(std/core/types/handled :: HX -> X)<(std/core/exn :: HX)>,(std/core/types/handled :: HX -> X)<(scope :: HX)>,(std/core/console :: X)> result;
+// monadic lift
+fun .mlift2539-linter : (e2 : expression, .y.2511 : result) -> <(std/core/types/div :: X),(std/core/types/handled :: HX -> X)<(std/core/exn :: HX)>,(std/core/types/handled :: HX -> X)<(scope :: HX)>,(std/core/console :: X)> result;
+pub fun linter : (inp : expression) -> <(std/core/pure :: E),(std/core/console :: X),(std/core/types/handled :: HX -> X)<(scope :: HX)>> result;
+pub fun printexpr : (exp : expression) -> <(std/core/console :: X)> ();
+// call `add` operation of the `:scope` effect
+pub fun add : (name : std/core/types/string, value : expression) -> <(std/core/types/handled :: HX -> X)<(scope :: HX)>> ();
+// monadic lift
+fun .mlift2540-scope_handeler : forall<(h :: H),(e :: E)> (elem : expression, name : std/core/types/string, scopeState : (std/core/types/local-var :: (H, V) -> V)<(h :: H),(std/core/list :: V -> V)<(std/core/types/string, expression)>>, .y.2516 : (std/core/list :: V -> V)<(std/core/types/string, expression)>) -> <(std/core/types/local :: H -> X)<(h :: H)>|(e :: E)> ();
+// monadic lift
+fun .mlift2541-scope_handeler : forall<(h :: H),(e :: E)> (name0 : std/core/types/string, .y.2518 : (std/core/list :: V -> V)<(std/core/types/string, expression)>) -> <(std/core/types/local :: H -> X)<(h :: H)>|(e :: E)> (std/core/types/maybe :: V -> V)<expression>;
+pub fun scope_handeler : forall<a,(e :: E)> (fun_to_exec : () -> <(std/core/types/handled :: HX -> X)<(scope :: HX)>|(e :: E)> a) -> (e :: E) a;
+// monadic lift
+fun .mlift2542-main : forall<(h :: H)> (.y.2523 : result) -> <(std/core/pure :: E),(std/core/console :: X),(std/core/types/handled :: HX -> X)<(scope :: HX)>> ();
+pub fun main : () -> <(std/core/pure :: E),(std/core/console :: X)> ();
+pub fun .hmain : () -> <(std/core/console :: X),(std/core/types/div :: X)> ();
+ 
+//------------------------------
+//#kki: external declarations
+ 
+ 
+//------------------------------
+//#kki: inline definitions
+ 
+//.inline-section
+inline borrow "^" fun is-ident // inline size: 1
+  = fn(patern: patern){
+    match (patern) {
+      ((internal/struct/Ident((.pat0: std/core/types/string) : std/core/types/string) : patern ) as .pat: patern)
+         -> std/core/types/True;
+      (.pat1: patern)
+         -> std/core/types/False;
+    };
+  };
+inline borrow "^" fun is-nullPat // inline size: 1
+  = fn(patern: patern){
+    match (patern) {
+      ((internal/struct/NullPat() : patern ) as .pat: patern)
+         -> std/core/types/True;
+      (.pat0: patern)
+         -> std/core/types/False;
+    };
+  };
+inline borrow "^" fun is-patpair // inline size: 1
+  = fn(patern: patern){
+    match (patern) {
+      ((internal/struct/Patpair((.pat0: patern) : patern, (.pat1: patern) : patern) : patern ) as .pat: patern)
+         -> std/core/types/True;
+      (.pat2: patern)
+         -> std/core/types/False;
+    };
+  };
+inline borrow "^" fun is-num // inline size: 1
+  = fn(expression: expression){
+    match (expression) {
+      ((internal/struct/Num((.pat0: std/core/types/int) : std/core/types/int) : expression ) as .pat: expression)
+         -> std/core/types/True;
+      (.pat1: expression)
+         -> std/core/types/False;
+    };
+  };
+inline borrow "^" fun is-efalse // inline size: 1
+  = fn(expression: expression){
+    match (expression) {
+      ((internal/struct/EFalse() : expression ) as .pat: expression)
+         -> std/core/types/True;
+      (.pat0: expression)
+         -> std/core/types/False;
+    };
+  };
+inline borrow "^" fun is-etrue // inline size: 1
+  = fn(expression: expression){
+    match (expression) {
+      ((internal/struct/ETrue() : expression ) as .pat: expression)
+         -> std/core/types/True;
+      (.pat0: expression)
+         -> std/core/types/False;
+    };
+  };
+inline borrow "^" fun is-variable // inline size: 1
+  = fn(expression: expression){
+    match (expression) {
+      ((internal/struct/Variable((.pat0: std/core/types/string) : std/core/types/string) : expression ) as .pat: expression)
+         -> std/core/types/True;
+      (.pat1: expression)
+         -> std/core/types/False;
+    };
+  };
+inline borrow "^" fun is-lambda // inline size: 1
+  = fn(expression: expression){
+    match (expression) {
+      ((internal/struct/Lambda((.pat0: patern) : patern, (.pat1: expression) : expression) : expression ) as .pat: expression)
+         -> std/core/types/True;
+      (.pat2: expression)
+         -> std/core/types/False;
+    };
+  };
+inline borrow "^" fun is-if // inline size: 1
+  = fn(expression: expression){
+    match (expression) {
+      ((internal/struct/If((.pat0: expression) : expression, (.pat1: expression) : expression, (.pat2: expression) : expression) : expression ) as .pat: expression)
+         -> std/core/types/True;
+      (.pat3: expression)
+         -> std/core/types/False;
+    };
+  };
+inline borrow "^" fun is-mlpair // inline size: 1
+  = fn(expression: expression){
+    match (expression) {
+      ((internal/struct/MLpair((.pat0: expression) : expression, (.pat1: expression) : expression) : expression ) as .pat: expression)
+         -> std/core/types/True;
+      (.pat2: expression)
+         -> std/core/types/False;
+    };
+  };
+inline borrow "^" fun is-apply // inline size: 1
+  = fn(expression: expression){
+    match (expression) {
+      ((internal/struct/Apply((.pat0: expression) : expression, (.pat1: expression) : expression) : expression ) as .pat: expression)
+         -> std/core/types/True;
+      (.pat2: expression)
+         -> std/core/types/False;
+    };
+  };
+inline borrow "^" fun is-let // inline size: 1
+  = fn(expression: expression){
+    match (expression) {
+      ((internal/struct/Let((.pat0: patern) : patern, (.pat1: expression) : expression, (.pat2: expression) : expression) : expression ) as .pat: expression)
+         -> std/core/types/True;
+      (.pat3: expression)
+         -> std/core/types/False;
+    };
+  };
+inline borrow "^" fun is-letrec // inline size: 1
+  = fn(expression: expression){
+    match (expression) {
+      ((internal/struct/Letrec((.pat0: patern) : patern, (.pat1: expression) : expression, (.pat2: expression) : expression) : expression ) as .pat: expression)
+         -> std/core/types/True;
+      (.pat3: expression)
+         -> std/core/types/False;
+    };
+  };
+inline borrow "^" fun is-value // inline size: 1
+  = fn(result: result){
+    match (result) {
+      ((internal/struct/Value((.pat0: expression) : expression) : result ) as .pat: result)
+         -> std/core/types/True;
+      ((.skip internal/struct/ResultError((.pat2: std/core/types/string) : std/core/types/string) : result ) as .pat1: result)
+         -> std/core/types/False;
+    };
+  };
+inline borrow "^" fun is-resultError // inline size: 1
+  = fn(result: result){
+    match (result) {
+      ((internal/struct/ResultError((.pat0: std/core/types/string) : std/core/types/string) : result ) as .pat: result)
+         -> std/core/types/True;
+      ((.skip internal/struct/Value((.pat2: expression) : expression) : result ) as .pat1: result)
+         -> std/core/types/False;
+    };
+  };
+inline borrow "^" fun .select-get // inline size: 0
+  = forall<(e :: E),a> fn(hnd: (.hnd-scope :: (E, V) -> V)<(e :: E),a>){
+    (match (hnd) {
+      ((.skip internal/struct/.Hnd-scope((.pat0: (std/core/hnd/clause2 :: (V, V, V, (E, V) -> V, E, V) -> V)<std/core/types/string,expression,(),(.hnd-scope :: (E, V) -> V),(e :: E),a>) : (std/core/hnd/clause2 :: (V, V, V, (E, V) -> V, E, V) -> V)<std/core/types/string,expression,(),(.hnd-scope :: (E, V) -> V),(e :: E),a>, (fun-get: (std/core/hnd/clause1 :: (V, V, (E, V) -> V, E, V) -> V)<std/core/types/string,(std/core/types/maybe :: V -> V)<expression>,(.hnd-scope :: (E, V) -> V),(e :: E),a>) : (std/core/hnd/clause1 :: (V, V, (E, V) -> V, E, V) -> V)<std/core/types/string,(std/core/types/maybe :: V -> V)<expression>,(.hnd-scope :: (E, V) -> V),(e :: E),a>) : (.hnd-scope :: (E, V) -> V)<(e :: E),a> ) as .pat: ((.hnd-scope :: (E, V) -> V)<(e :: E),a>))
+         -> fun-get;
+    });
+  };
+inline borrow "^" fun .select-add // inline size: 0
+  = forall<(e :: E),a> fn(hnd: (.hnd-scope :: (E, V) -> V)<(e :: E),a>){
+    (match (hnd) {
+      ((.skip internal/struct/.Hnd-scope((fun-add: (std/core/hnd/clause2 :: (V, V, V, (E, V) -> V, E, V) -> V)<std/core/types/string,expression,(),(.hnd-scope :: (E, V) -> V),(e :: E),a>) : (std/core/hnd/clause2 :: (V, V, V, (E, V) -> V, E, V) -> V)<std/core/types/string,expression,(),(.hnd-scope :: (E, V) -> V),(e :: E),a>, (.pat0: (std/core/hnd/clause1 :: (V, V, (E, V) -> V, E, V) -> V)<std/core/types/string,(std/core/types/maybe :: V -> V)<expression>,(.hnd-scope :: (E, V) -> V),(e :: E),a>) : (std/core/hnd/clause1 :: (V, V, (E, V) -> V, E, V) -> V)<std/core/types/string,(std/core/types/maybe :: V -> V)<expression>,(.hnd-scope :: (E, V) -> V),(e :: E),a>) : (.hnd-scope :: (E, V) -> V)<(e :: E),a> ) as .pat: ((.hnd-scope :: (E, V) -> V)<(e :: E),a>))
+         -> fun-add;
+    });
+  };
+inline fun get // inline size: 5
+  = fn<<(std/core/types/handled :: HX -> X)<(scope :: HX)>>>(name: std/core/types/string){
+    std/core/hnd/.perform1<std/core/types/string,(std/core/types/maybe :: V -> V)<expression>,<(std/core/types/handled :: HX -> X)<(scope :: HX)>>,(.hnd-scope :: (E, V) -> V)>((std/core/types/.open<(std/core/types/(<>) :: E),<(std/core/types/handled :: HX -> X)<(scope :: HX)>>,(i : std/core/hnd/ev-index) -> (std/core/hnd/ev :: ((E, V) -> V) -> V)<(.hnd-scope :: (E, V) -> V)>,(i : std/core/hnd/ev-index) -> <(std/core/types/handled :: HX -> X)<(scope :: HX)>> (std/core/hnd/ev :: ((E, V) -> V) -> V)<(.hnd-scope :: (E, V) -> V)>>((std/core/hnd/.evv-at<(.hnd-scope :: (E, V) -> V)>))((std/core/types/.open<(std/core/types/(<>) :: E),<(std/core/types/handled :: HX -> X)<(scope :: HX)>>,(i : std/core/types/int) -> std/core/types/ssize_t,(i : std/core/types/int) -> <(std/core/types/handled :: HX -> X)<(scope :: HX)>> std/core/types/ssize_t>(std/core/ssize_t)(0)))), internal/struct/.select-get, name);
+  };
+fun printexpr // inline size: 2
+  = fn<<(std/core/console :: X)>>(exp: expression){
+    val s.2486 : std/core/types/string
+          = internal/struct/show.1(exp);
+    std/core/printsln(s.2486);
+  };
+inline fun add // inline size: 5
+  = fn<<(std/core/types/handled :: HX -> X)<(scope :: HX)>>>(name: std/core/types/string, value: expression){
+    std/core/hnd/.perform2<std/core/types/string,expression,(),<(std/core/types/handled :: HX -> X)<(scope :: HX)>>,(.hnd-scope :: (E, V) -> V)>((std/core/types/.open<(std/core/types/(<>) :: E),<(std/core/types/handled :: HX -> X)<(scope :: HX)>>,(i : std/core/hnd/ev-index) -> (std/core/hnd/ev :: ((E, V) -> V) -> V)<(.hnd-scope :: (E, V) -> V)>,(i : std/core/hnd/ev-index) -> <(std/core/types/handled :: HX -> X)<(scope :: HX)>> (std/core/hnd/ev :: ((E, V) -> V) -> V)<(.hnd-scope :: (E, V) -> V)>>((std/core/hnd/.evv-at<(.hnd-scope :: (E, V) -> V)>))((std/core/types/.open<(std/core/types/(<>) :: E),<(std/core/types/handled :: HX -> X)<(scope :: HX)>>,(i : std/core/types/int) -> std/core/types/ssize_t,(i : std/core/types/int) -> <(std/core/types/handled :: HX -> X)<(scope :: HX)>> std/core/types/ssize_t>(std/core/ssize_t)(0)))), internal/struct/.select-add, name, value);
+  };

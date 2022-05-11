@@ -1,0 +1,142 @@
+module interface internal-struct
+ 
+//------------------------------
+//#kki: import declarations
+ 
+import std/core/types = std/core/types = "";
+import std/core/hnd = std/core/hnd = "";
+import std/core = std/core = "";
+import language-constructs = language-constructs = "";
+ 
+//------------------------------
+//#kki: external imports
+ 
+ 
+//------------------------------
+//#kki: fixity declarations
+ 
+ 
+//------------------------------
+//#kki: local imported aliases
+ 
+// An alias for pure effects: a pure function always returns the same result
+// when called with the same arguments but may not terminate or raise an exception.
+local alias std/core/pure :: E = <(std/core/types/handled :: HX -> X)<(std/core/exn :: HX)>,(std/core/types/div :: X)> = 1;
+ 
+//------------------------------
+//#kki: type declarations
+ 
+// handlers for the `:scope` effect
+pub recursive type .hnd-scope <(e :: E),a> :: (E, V) -> V {
+  pub con .Hnd-scope(fun-add: (std/core/hnd/clause2 :: (V, V, V, (E, V) -> V, E, V) -> V)<std/core/types/string,language-constructs/expression,(),(.hnd-scope :: (E, V) -> V),(e :: E),a>, fun-get: (std/core/hnd/clause1 :: (V, V, (E, V) -> V, E, V) -> V)<std/core/types/string,language-constructs/expression,(.hnd-scope :: (E, V) -> V),(e :: E),a>) : forall<(e :: E),a> (fun-add : (std/core/hnd/clause2 :: (V, V, V, (E, V) -> V, E, V) -> V)<std/core/types/string,language-constructs/expression,(),(.hnd-scope :: (E, V) -> V),(e :: E),a>, fun-get : (std/core/hnd/clause1 :: (V, V, (E, V) -> V, E, V) -> V)<std/core/types/string,language-constructs/expression,(.hnd-scope :: (E, V) -> V),(e :: E),a>) -> (.hnd-scope :: (E, V) -> V)<(e :: E),a>;
+};
+pub value{0,1} type result {
+  pub con Value(exp: language-constructs/expression) : (exp : language-constructs/expression) -> result;
+  pub con ResultError(s: std/core/types/string) : (s : std/core/types/string) -> result;
+};
+// `:scope` effect
+pub type scope :: HX {
+  con Scope<(e :: E),a>((.hnd-scope :: (E, V) -> V)<(e :: E),a>) : forall<(e :: E),a> ((.hnd-scope :: (E, V) -> V)<(e :: E),a>) -> (scope :: HX);
+};
+ 
+//------------------------------
+//#kki: declarations
+ 
+// Automatically generated. Tests for the `Value` constructor of the `:result` type.
+pub fun is-value : (^ result : result) -> std/core/types/bool;
+// Automatically generated. Tests for the `ResultError` constructor of the `:result` type.
+pub fun is-resultError : (^ result : result) -> std/core/types/bool;
+// runtime tag for the `:scope` effect
+pub val .tag-scope : (std/core/hnd/htag :: ((E, V) -> V) -> V)<(.hnd-scope :: (E, V) -> V)>;
+// handler for the `:scope` effect
+pub fun .handle-scope : forall<a,(e :: E),b> (cfc : std/core/types/int32, hnd : (.hnd-scope :: (E, V) -> V)<(e :: E),b>, ret : (res : a) -> (e :: E) b, action : () -> <(std/core/types/handled :: HX -> X)<(scope :: HX)>|(e :: E)> a) -> (e :: E) b;
+// select `get` operation out of the `:scope` effect handler
+pub fun .select-get : forall<(e :: E),a> (^ hnd : (.hnd-scope :: (E, V) -> V)<(e :: E),a>) -> (std/core/hnd/clause1 :: (V, V, (E, V) -> V, E, V) -> V)<std/core/types/string,language-constructs/expression,(.hnd-scope :: (E, V) -> V),(e :: E),a>;
+// select `add` operation out of the `:scope` effect handler
+pub fun .select-add : forall<(e :: E),a> (^ hnd : (.hnd-scope :: (E, V) -> V)<(e :: E),a>) -> (std/core/hnd/clause2 :: (V, V, V, (E, V) -> V, E, V) -> V)<std/core/types/string,language-constructs/expression,(),(.hnd-scope :: (E, V) -> V),(e :: E),a>;
+pub fun printexpr : (exp : language-constructs/expression) -> <(std/core/console :: X)> ();
+// call `get` operation of the `:scope` effect
+pub fun get : (name : std/core/types/string) -> <(std/core/types/handled :: HX -> X)<(scope :: HX)>> language-constructs/expression;
+// monadic lift
+fun .mlift1350-op : (.acc : (std/core/types/ctail :: V -> V)<language-constructs/expression>, .y.1278 : language-constructs/expression) -> <(std/core/types/handled :: HX -> X)<(scope :: HX)>,(std/core/console :: X),(std/core/types/div :: X),(std/core/types/handled :: HX -> X)<(std/core/exn :: HX)>> language-constructs/expression;
+// monadic lift
+fun .mlift1351-op : (.acc : (std/core/types/ctail :: V -> V)<language-constructs/expression>, .y.1283 : language-constructs/expression) -> <(std/core/types/handled :: HX -> X)<(std/core/exn :: HX)>,(std/core/console :: X),(std/core/types/div :: X),(std/core/types/handled :: HX -> X)<(scope :: HX)>> language-constructs/expression;
+// monadic lift
+fun .mlift1352-op : (.acc : (std/core/types/ctail :: V -> V)<language-constructs/expression>, otherwise : language-constructs/expression, thus : language-constructs/expression, .y.1280 : language-constructs/expression) -> <(std/core/types/div :: X),(std/core/types/handled :: HX -> X)<(std/core/exn :: HX)>,(std/core/types/handled :: HX -> X)<(scope :: HX)>,(std/core/console :: X)> language-constructs/expression;
+// monadic lift
+fun .mlift1353-op : (.acc : (std/core/types/ctail :: V -> V)<language-constructs/expression>, e2 : language-constructs/expression, .ctail.1268 : language-constructs/expression) -> <(std/core/types/div :: X),(std/core/types/handled :: HX -> X)<(std/core/exn :: HX)>,(std/core/types/handled :: HX -> X)<(scope :: HX)>,(std/core/console :: X)> language-constructs/expression;
+// monadic lift
+fun .mlift1354-op : (.acc : (std/core/types/ctail :: V -> V)<language-constructs/expression>, .y.1287 : language-constructs/expression) -> <(std/core/types/handled :: HX -> X)<(std/core/exn :: HX)>,(std/core/console :: X),(std/core/types/div :: X),(std/core/types/handled :: HX -> X)<(scope :: HX)>> language-constructs/expression;
+// monadic lift
+fun .mlift1355-op : (.accm : (language-constructs/expression) -> language-constructs/expression, otherwise : language-constructs/expression, thus : language-constructs/expression, .y.1293 : language-constructs/expression) -> <(std/core/types/div :: X),(std/core/types/handled :: HX -> X)<(std/core/exn :: HX)>,(std/core/types/handled :: HX -> X)<(scope :: HX)>,(std/core/console :: X)> language-constructs/expression;
+// monadic lift
+fun .mlift1356-op : (.accm : (language-constructs/expression) -> language-constructs/expression, e2 : language-constructs/expression, .ctail.1274 : language-constructs/expression) -> <(std/core/types/div :: X),(std/core/types/handled :: HX -> X)<(std/core/exn :: HX)>,(std/core/types/handled :: HX -> X)<(scope :: HX)>,(std/core/console :: X)> language-constructs/expression;
+pub fun .ctail-linter : (inp : language-constructs/expression, .acc : (std/core/types/ctail :: V -> V)<language-constructs/expression>) -> <(std/core/pure :: E),(std/core/console :: X),(std/core/types/handled :: HX -> X)<(scope :: HX)>> language-constructs/expression;
+pub fun .ctailm-linter : (inp : language-constructs/expression, .accm : (language-constructs/expression) -> language-constructs/expression) -> <(std/core/pure :: E),(std/core/console :: X),(std/core/types/handled :: HX -> X)<(scope :: HX)>> language-constructs/expression;
+pub fun linter : (inp : language-constructs/expression) -> <(std/core/pure :: E),(std/core/console :: X),(std/core/types/handled :: HX -> X)<(scope :: HX)>> language-constructs/expression;
+// call `add` operation of the `:scope` effect
+pub fun add : (name : std/core/types/string, value : language-constructs/expression) -> <(std/core/types/handled :: HX -> X)<(scope :: HX)>> ();
+// monadic lift
+fun .mlift1357-scope_handeler : forall<(h :: H),(e :: E)> (elem : language-constructs/expression, name : std/core/types/string, scopeState : (std/core/types/local-var :: (H, V) -> V)<(h :: H),(std/core/list :: V -> V)<(std/core/types/string, language-constructs/expression)>>, .y.1307 : (std/core/list :: V -> V)<(std/core/types/string, language-constructs/expression)>) -> <(std/core/types/local :: H -> X)<(h :: H)>,(std/core/types/handled :: HX -> X)<(std/core/exn :: HX)>|(e :: E)> ();
+// monadic lift
+fun .mlift1358-scope_handeler : forall<(h :: H),(e :: E)> (name0 : std/core/types/string, .y.1309 : (std/core/list :: V -> V)<(std/core/types/string, language-constructs/expression)>) -> <(std/core/types/local :: H -> X)<(h :: H)>,(std/core/types/handled :: HX -> X)<(std/core/exn :: HX)>|(e :: E)> language-constructs/expression;
+pub fun scope_handeler : forall<a,(e :: E)> (fun_to_exec : () -> <(std/core/types/handled :: HX -> X)<(scope :: HX)>,(std/core/types/handled :: HX -> X)<(std/core/exn :: HX)>|(e :: E)> a) -> <(std/core/types/handled :: HX -> X)<(std/core/exn :: HX)>|(e :: E)> a;
+// monadic lift
+fun .mlift1359-main : forall<(h :: H)> (v : language-constructs/expression) -> <(std/core/pure :: E),(std/core/console :: X),(std/core/types/handled :: HX -> X)<(scope :: HX)>> ();
+pub fun main : () -> <(std/core/pure :: E),(std/core/console :: X)> ();
+pub fun .hmain : () -> <(std/core/console :: X),(std/core/types/div :: X)> ();
+ 
+//------------------------------
+//#kki: external declarations
+ 
+ 
+//------------------------------
+//#kki: inline definitions
+ 
+//.inline-section
+inline borrow "^" fun is-value // inline size: 1
+  = fn(result: result){
+    match (result) {
+      ((internal-struct/Value((.pat0: language-constructs/expression) : language-constructs/expression) : result ) as .pat: result)
+         -> std/core/types/True;
+      ((.skip internal-struct/ResultError((.pat2: std/core/types/string) : std/core/types/string) : result ) as .pat1: result)
+         -> std/core/types/False;
+    };
+  };
+inline borrow "^" fun is-resultError // inline size: 1
+  = fn(result: result){
+    match (result) {
+      ((internal-struct/ResultError((.pat0: std/core/types/string) : std/core/types/string) : result ) as .pat: result)
+         -> std/core/types/True;
+      ((.skip internal-struct/Value((.pat2: language-constructs/expression) : language-constructs/expression) : result ) as .pat1: result)
+         -> std/core/types/False;
+    };
+  };
+inline borrow "^" fun .select-get // inline size: 0
+  = forall<(e :: E),a> fn(hnd: (.hnd-scope :: (E, V) -> V)<(e :: E),a>){
+    (match (hnd) {
+      ((.skip internal-struct/.Hnd-scope((.pat0: (std/core/hnd/clause2 :: (V, V, V, (E, V) -> V, E, V) -> V)<std/core/types/string,language-constructs/expression,(),(.hnd-scope :: (E, V) -> V),(e :: E),a>) : (std/core/hnd/clause2 :: (V, V, V, (E, V) -> V, E, V) -> V)<std/core/types/string,language-constructs/expression,(),(.hnd-scope :: (E, V) -> V),(e :: E),a>, (fun-get: (std/core/hnd/clause1 :: (V, V, (E, V) -> V, E, V) -> V)<std/core/types/string,language-constructs/expression,(.hnd-scope :: (E, V) -> V),(e :: E),a>) : (std/core/hnd/clause1 :: (V, V, (E, V) -> V, E, V) -> V)<std/core/types/string,language-constructs/expression,(.hnd-scope :: (E, V) -> V),(e :: E),a>) : (.hnd-scope :: (E, V) -> V)<(e :: E),a> ) as .pat: ((.hnd-scope :: (E, V) -> V)<(e :: E),a>))
+         -> fun-get;
+    });
+  };
+inline borrow "^" fun .select-add // inline size: 0
+  = forall<(e :: E),a> fn(hnd: (.hnd-scope :: (E, V) -> V)<(e :: E),a>){
+    (match (hnd) {
+      ((.skip internal-struct/.Hnd-scope((fun-add: (std/core/hnd/clause2 :: (V, V, V, (E, V) -> V, E, V) -> V)<std/core/types/string,language-constructs/expression,(),(.hnd-scope :: (E, V) -> V),(e :: E),a>) : (std/core/hnd/clause2 :: (V, V, V, (E, V) -> V, E, V) -> V)<std/core/types/string,language-constructs/expression,(),(.hnd-scope :: (E, V) -> V),(e :: E),a>, (.pat0: (std/core/hnd/clause1 :: (V, V, (E, V) -> V, E, V) -> V)<std/core/types/string,language-constructs/expression,(.hnd-scope :: (E, V) -> V),(e :: E),a>) : (std/core/hnd/clause1 :: (V, V, (E, V) -> V, E, V) -> V)<std/core/types/string,language-constructs/expression,(.hnd-scope :: (E, V) -> V),(e :: E),a>) : (.hnd-scope :: (E, V) -> V)<(e :: E),a> ) as .pat: ((.hnd-scope :: (E, V) -> V)<(e :: E),a>))
+         -> fun-add;
+    });
+  };
+fun printexpr // inline size: 2
+  = fn<<(std/core/console :: X)>>(exp: language-constructs/expression){
+    val s.1260 : std/core/types/string
+          = language-constructs/show.1(exp);
+    std/core/printsln(s.1260);
+  };
+inline fun get // inline size: 5
+  = fn<<(std/core/types/handled :: HX -> X)<(scope :: HX)>>>(name: std/core/types/string){
+    std/core/hnd/.perform1<std/core/types/string,language-constructs/expression,<(std/core/types/handled :: HX -> X)<(scope :: HX)>>,(.hnd-scope :: (E, V) -> V)>((std/core/types/.open<(std/core/types/(<>) :: E),<(std/core/types/handled :: HX -> X)<(scope :: HX)>>,(i : std/core/hnd/ev-index) -> (std/core/hnd/ev :: ((E, V) -> V) -> V)<(.hnd-scope :: (E, V) -> V)>,(i : std/core/hnd/ev-index) -> <(std/core/types/handled :: HX -> X)<(scope :: HX)>> (std/core/hnd/ev :: ((E, V) -> V) -> V)<(.hnd-scope :: (E, V) -> V)>>((std/core/hnd/.evv-at<(.hnd-scope :: (E, V) -> V)>))((std/core/types/.open<(std/core/types/(<>) :: E),<(std/core/types/handled :: HX -> X)<(scope :: HX)>>,(i : std/core/types/int) -> std/core/types/ssize_t,(i : std/core/types/int) -> <(std/core/types/handled :: HX -> X)<(scope :: HX)>> std/core/types/ssize_t>(std/core/ssize_t)(0)))), internal-struct/.select-get, name);
+  };
+inline fun add // inline size: 5
+  = fn<<(std/core/types/handled :: HX -> X)<(scope :: HX)>>>(name: std/core/types/string, value: language-constructs/expression){
+    std/core/hnd/.perform2<std/core/types/string,language-constructs/expression,(),<(std/core/types/handled :: HX -> X)<(scope :: HX)>>,(.hnd-scope :: (E, V) -> V)>((std/core/types/.open<(std/core/types/(<>) :: E),<(std/core/types/handled :: HX -> X)<(scope :: HX)>>,(i : std/core/hnd/ev-index) -> (std/core/hnd/ev :: ((E, V) -> V) -> V)<(.hnd-scope :: (E, V) -> V)>,(i : std/core/hnd/ev-index) -> <(std/core/types/handled :: HX -> X)<(scope :: HX)>> (std/core/hnd/ev :: ((E, V) -> V) -> V)<(.hnd-scope :: (E, V) -> V)>>((std/core/hnd/.evv-at<(.hnd-scope :: (E, V) -> V)>))((std/core/types/.open<(std/core/types/(<>) :: E),<(std/core/types/handled :: HX -> X)<(scope :: HX)>>,(i : std/core/types/int) -> std/core/types/ssize_t,(i : std/core/types/int) -> <(std/core/types/handled :: HX -> X)<(scope :: HX)>> std/core/types/ssize_t>(std/core/ssize_t)(0)))), internal-struct/.select-add, name, value);
+  };

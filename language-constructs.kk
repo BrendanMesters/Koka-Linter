@@ -6,6 +6,10 @@ https://link-springer-com.tudelft.idm.oclc.org/content/pdf/10.1007/BFb0039592.pd
 
 */
 
+// For the add_patterns_and_expressions function
+import error-warning-handler
+
+
 type patern
     Ident (name: string)
     NullPat
@@ -31,6 +35,9 @@ type expression
     EAdd         (e1: expression, e2: expression)
     ESub         (e1: expression, e2: expression)
 
+    // -= Error Value =-
+    Null
+
 
 fun show(pat: patern) : total string
     match pat
@@ -54,4 +61,24 @@ fun show(exp: expression) : total string
         EMult       (e1: expression, e2: expression) -> "Arithmatic: Multiply on: {" ++ e1.show ++ "} and {" ++ e2.show ++ "}"
         EAdd        (e1: expression, e2: expression) -> "Arithmatic: Addition on: {" ++ e1.show ++ "} and {" ++ e2.show ++ "}"
         ESub        (e1: expression, e2: expression) -> "Arithmatic: Subtraction on: {" ++ e1.show ++ "} and {" ++ e2.show ++ "}"
+        Null                                         -> "Null expression - This is an Error Value"
         _ -> "Not a valid expression, note this should never be reached and is just here to catch possibly otherwise very obscure bugs that might be introduced in the future :-D"
+
+fun patterns_to_string(args: patern) : <div> list<string>
+    match args
+        Ident(name) -> [name]
+        NullPat -> Nil
+        Patpair(p1, p2) -> [p1.patterns_to_string, p2.patterns_to_string].concat()
+
+
+fun add_patterns_and_expressions(pat: patern, expr: expression) : <div,errors-and-warnings> list<(string, expression)>
+    match (pat, expr)
+        (Ident (name), value) ->  [(name, value)]
+        (NullPat, value) -> 
+            add_warning("Nullpat encountered in variable binding, unused value was: {" ++ value.show ++ "}")
+            []
+        (Patpair(p1, p2), MLpair(v1, v2)) -> 
+            [add_patterns_and_expressions(p1, v1), add_patterns_and_expressions(p2, v2)].concat
+        _ -> 
+            add_error("Type mismatch during variable binding, pattern was: {" ++ pat.show ++ "} and value was {" ++ expr.show ++ "}")
+            []

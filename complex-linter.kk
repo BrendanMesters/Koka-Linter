@@ -1,7 +1,7 @@
 import scope
 import language-constructs
 
-fun linter (inp: expression) : <div, exn, my_scope, console>  expression
+fun linter (inp: expression) : <div, exn, complex_scope, console>  expression
     match inp
         Variable    (name) -> get(name) /* 
             match get(name)

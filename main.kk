@@ -25,11 +25,6 @@ import complex-linter
 import simple-linter
     
 
-//  -= Misc functions =-
-
-fun printexpr(exp: expression) : console ()
-    println(exp.show())
-
 //  -= Misc Variables [-
 
 val testbar = "je moeder"
@@ -43,8 +38,8 @@ val functie_jetser2 = Lambda (Patpair(Ident ("variable"), Ident("not a variable 
 val what_to_lint = 
     [
         False, // complex-linter/linter
-        True,  // simple-linter/variable_scope_linter
-        False, // WIP
+        False,  // simple-linter/variable_scope_linter
+        True,  // simple-linter/variable_type_linter
         False, // WIP
         False  // WIP
     ]
@@ -62,33 +57,30 @@ fun main ()
     var tmp : list<(string, expression)> := Nil 
     
     
-    val program = If(Apply(functie_jetser2, (MLpair (ETrue, EFalse))), Variable("bestaat niet"), Variable("variable"))
+    val program = prog_fact
+
+
+
+    with errors_and_warnings_handler
+
+
+
     if (what_to_lint[0]).maybeq(Just (True))
     then
         with complex_scope_handeler()
         match linter(program)
             v -> printexpr(v)
             _ -> println("Error, this code shouldn't be reachable (end of main)")
-        
-        /*
-        val error_printer = fn (error_val: exception) println(error_val.show())
-        with scope_handeler()
-        {
-            match linter(program)
-                v -> printexpr(v)
-                _ -> println("Error, this code shouldn't be reachable (end of main)")
-        }.try(error_printer)
-        */
+       
     if (what_to_lint[1]).maybeq(Just (True))
     then
-        with errors_and_warnings_handler
         with simple_scope_handler
         variable_scope_linter(program)
-        print_errors_and_warnings(get_errors_and_warnings())
 
     if (what_to_lint[2]).maybeq(Just (True))
     then
-        println("Not yet ready")
+        with complex_scope_handeler
+        variable_type_linter(program).printexpr
 
     if (what_to_lint[3]).maybeq(Just (True))
     then
@@ -98,5 +90,63 @@ fun main ()
     then
         println("Not yet ready")
 
+    print_errors_and_warnings(get_errors_and_warnings())
     println("done")
         
+
+
+
+
+/*
+            -= Mini-ML Programs =-
+
+Here we'll have variables containing various mini-ml
+programs that can be loaded into the main function by
+changing the `program` variable there.
+
+*/
+
+
+// simple ones
+
+val prog_num = Num(42)
+val prog_pair = MLpair(Num(42), Num(69))
+val prog_bools = MLpair(EFalse, ETrue)
+val prog_simple_let_var = Let(Ident("foo"), Num(42), Variable("foo"))
+val prog_arithmatic = ESub(EMult(EAdd(Num(4), Num(2)), Num(12)), Num(3))
+
+
+
+// actual programs
+
+val prog_fact = 
+    Letrec( 
+        Ident("fact"),
+        Lambda(
+            Ident("x"), 
+            If(
+                Equals( Variable("x"), Num(0) ),
+                Num(1),
+                EMult(
+                    Variable("x"), 
+                    Apply(Variable("fact"), ESub(Variable("x"), Num(1)))
+                )
+            )),
+        Apply(Variable("fact"), Num(69)))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -114,17 +114,19 @@ fun variable_type_linter (inp: expression) : <div, exn, errors-and-warnings, com
             else
                 get(name)
         Lambda      (arg: patern, body: expression) -> 
-            add_warning ("Unapplied Lambda found with args {" ++ arg.show ++ "} and body {" ++ body.show ++ "}")
+            //add_warning ("Unapplied Lambda found with args {" ++ arg.show ++ "} and body {" ++ body.show ++ "}")
             inp
         If          (cond: expression, thus: expression, otherwise: expression) -> 
             var condition := False
             match variable_type_linter(cond)
                 EFalse -> condition := False
                 ETrue -> condition := True
+            if condition then thus.variable_type_linter else otherwise.variable_type_linter
+            /*
             val th = variable_type_linter(thus)
             val oth = variable_type_linter(otherwise)
             if condition then th else oth
-
+            */
         MLpair      (e1: expression, e2: expression) -> 
             MLpair(variable_type_linter(e1), variable_type_linter(e2))
         Apply       (func: expression, inp_vals: expression) ->
@@ -137,15 +139,60 @@ fun variable_type_linter (inp: expression) : <div, exn, errors-and-warnings, com
                     set_state(old_scope)
                     retval
                 Variable (name) -> Apply (variable_type_linter(func), inp_vals).variable_type_linter
-                other -> add_error("The first argument of function application was not a function but was {" ++ other.show ++ "}")
+                other -> 
+                    add_error("The first argument of function application was not a function but was {" ++ other.show ++ "}")
+                    Null
 
-        Let         (arg: patern, arg_val: expression, body: expression)
-        Letrec      (arg: patern, arg_val: expression, body: expression)
+        Let         (arg: patern, arg_val: expression, body: expression) ->
+            val old_scope = get_state()
+            // lets hope that this next line does actually work... it at least doesn't throw errors
+            add_patterns_and_expressions(arg, arg_val).foreach(fn ((name, value)) { add(name, value.variable_type_linter)})
+            val retval = body.variable_type_linter
+            set_state(old_scope)
+            retval
+        Letrec      (arg: patern, arg_val: expression, body: expression) ->
+            val old_scope = get_state()
+            // lets hope that this next line does actually work... it at least doesn't throw errors
+            add_patterns_and_expressions(arg, arg_val).foreach(fn ((name, value)) { add(name, value.variable_type_linter)})
+            val retval = body.variable_type_linter
+            set_state(old_scope)
+            retval
+        Equals      (e1: expression, e2: expression) ->
+            match (e1.variable_type_linter, e2.variable_type_linter)
+                (Num(n1), Num(n2)) -> if n1 == n2 then ETrue else EFalse
+                (EFalse, EFalse) -> ETrue
+                (ETrue, ETrue) -> ETrue
+                (MLpair(a1, a2), MLpair(b1, b2)) -> 
+                    match (Equals(a1, b1).variable_type_linter, Equals(a2, b2).variable_type_linter)
+                        (ETrue, ETrue) -> ETrue
+                        _ -> EFalse
+                (Null, _) -> Null
+                (_, Null) -> Null
+                _ -> EFalse
 
         /*
         Expantion of the expression type to allow number operations, as this isn't possible when
         following the abstract data types laid out in the origional paper
         */
-        EMult        (e1: expression, e2: expression)
-        EAdd         (e1: expression, e2: expression)
-        ESub         (e1: expression, e2: expression)
+        EMult        (e1: expression, e2: expression) ->
+            match (e1.variable_type_linter, e2.variable_type_linter)
+                (Num(n1), Num(n2)) -> Num(n1 * n2)
+                (val1, val2) -> 
+                    add_error("Arithmatic operation didn't have two numbers as input, instead it found {" ++ val1.show ++ "} and {" ++ val2.show ++ "}")
+                    Null
+        EAdd         (e1: expression, e2: expression) ->
+            match (e1.variable_type_linter, e2.variable_type_linter)
+                (Num(n1), Num(n2)) -> Num(n1 + n2)
+                (val1, val2) -> 
+                    add_error("Arithmatic operation didn't have two numbers as input, instead it found {" ++ val1.show ++ "} and {" ++ val2.show ++ "}")
+                    Null
+        ESub         (e1: expression, e2: expression) ->
+            match (e1.variable_type_linter, e2.variable_type_linter)
+                (Num(n1), Num(n2)) -> Num(n1 - n2)
+                (val1, val2) -> 
+                    add_error("Arithmatic operation didn't have two numbers as input, instead it found {" ++ val1.show ++ "} and {" ++ val2.show ++ "}")
+                    Null
+
+        Null -> 
+            add_error("Null value found, this is an error value")
+            Null

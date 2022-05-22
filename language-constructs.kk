@@ -31,6 +31,7 @@ type expression
     Expantion of the expression type to allow number operations, as this isn't possible when
     following the abstract data types laid out in the origional paper
     */
+    Equals       (e1: expression, e2: expression)
     EMult        (e1: expression, e2: expression)
     EAdd         (e1: expression, e2: expression)
     ESub         (e1: expression, e2: expression)
@@ -58,11 +59,21 @@ fun show(exp: expression) : total string
         Apply       (e1: expression, e2: expression) -> "Application of: {" ++ e1.show ++ "} onto values {" ++ e2.show ++ "}"
         Let         (arg: patern, arg_val: expression, body: expression) -> "Let expression: let '" ++ arg.show ++ "' be {" ++ arg_val.show ++ "} in {" ++ body.show ++ "}"
         Letrec      (arg: patern, arg_val: expression, body: expression) -> "LetRec expression: letRec '" ++ arg.show ++ "' be {" ++ arg_val.show ++ "} in {" ++ body.show ++ "}"
+        Equals      (e1: expression, e2: expression) -> "Equality check: {" ++ e1.show ++ "} == {" ++ e2.show ++ "}"
         EMult       (e1: expression, e2: expression) -> "Arithmatic: Multiply on: {" ++ e1.show ++ "} and {" ++ e2.show ++ "}"
         EAdd        (e1: expression, e2: expression) -> "Arithmatic: Addition on: {" ++ e1.show ++ "} and {" ++ e2.show ++ "}"
         ESub        (e1: expression, e2: expression) -> "Arithmatic: Subtraction on: {" ++ e1.show ++ "} and {" ++ e2.show ++ "}"
         Null                                         -> "Null expression - This is an Error Value"
         _ -> "Not a valid expression, note this should never be reached and is just here to catch possibly otherwise very obscure bugs that might be introduced in the future :-D"
+
+
+
+
+fun printexpr(exp: expression) : console ()
+    println("Expression print: " ++ exp.show())
+
+
+
 
 fun patterns_to_string(args: patern) : <div> list<string>
     match args

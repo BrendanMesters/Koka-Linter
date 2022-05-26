@@ -235,7 +235,7 @@ fun test_substitute(inp: expression, shadow: list<string> = Nil): <div, exn, err
         EMult(e1, e2) -> EMult(e1.test_substitute(shadow), e1.test_substitute(shadow))
         EAdd(e1, e2) -> EAdd(e1.test_substitute(shadow), e1.test_substitute(shadow))
         ESub(e1, e2) -> ESub(e1.test_substitute(shadow), e1.test_substitute(shadow))
-        _ -> Null
+        //_ -> Null
  
 
 fun test_interpreter (inp: expression) : <div, exn, errors-and-warnings, polymorphic_scope<expression>, console> expression

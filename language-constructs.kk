@@ -40,6 +40,13 @@ type expression
     Null
 
 
+
+type expr_val
+    ENumber
+    EBoolean
+    EPair(e1: expr_val, e2: expr_val)
+
+
 fun show(pat: patern) : total string
     match pat
         Ident (name) -> "Pattern: '" ++ name ++ "'"
@@ -66,7 +73,22 @@ fun show(exp: expression) : total string
         Null                                         -> "Null expression - This is an Error Value"
         _ -> "Not a valid expression, note this should never be reached and is just here to catch possibly otherwise very obscure bugs that might be introduced in the future :-D"
 
+fun show(exp: expr_val) : total string
+    match exp
+        ENumber -> "Expression type Number"
+        EBoolean -> "Expression type Boolean"
+        EPair(e1, e2) -> "Expression pair of {" ++ e1.show ++ "} and {" ++ e2.show ++ "}"
 
+fun (==)(e1:expr_val, e2:expr_val) : <div> bool
+    match (e1, e2)
+        (ENumber, ENumber) -> True
+        (EBoolean, EBoolean) -> True
+        (EPair(a1, a2), EPair(b1, b2)) ->
+            (a1 == b1) && (a2 == b2)
+        _ -> False
+
+fun (!=)(e1: expr_val, e2: expr_val) : <div> bool
+    !(e1 == e2)
 
 
 fun printexpr(exp: expression) : console ()

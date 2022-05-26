@@ -38,10 +38,10 @@ val functie_jetser2 = Lambda (Patpair(Ident ("variable"), Ident("not a variable 
 val what_to_lint = 
     [
         False, // complex-linter/linter
-        False,  // simple-linter/variable_scope_linter
-        True,  // simple-linter/variable_type_linter
-        False, // WIP
-        False  // WIP
+        True,  // simple-linter/variable_scope_linter
+        True,  // simple-linter/interpreter
+        True, // WIP
+        True  // WIP
     ]
 
 //  -= Main Code =-
@@ -57,7 +57,7 @@ fun main ()
     var tmp : list<(string, expression)> := Nil 
     
     
-    val program = prog_fact
+    val program = prog_num
 
 
 
@@ -70,7 +70,7 @@ fun main ()
         with complex_scope_handeler()
         match linter(program)
             v -> printexpr(v)
-            _ -> println("Error, this code shouldn't be reachable (end of main)")
+            //_ -> println("Error, this code shouldn't be reachable (end of main)")
        
     if (what_to_lint[1]).maybeq(Just (True))
     then
@@ -80,15 +80,16 @@ fun main ()
     if (what_to_lint[2]).maybeq(Just (True))
     then
         with complex_scope_handeler
-        variable_type_linter(program).printexpr
+        interpreter(program).printexpr
 
     if (what_to_lint[3]).maybeq(Just (True))
     then
-        println("Not yet ready")
-
+        with concretely_expression_based_scope_handler
+        test_interpreter(program).printexpr
     if (what_to_lint[4]).maybeq(Just (True))
     then
-        println("Not yet ready")
+        with concretely_type_based_scope_handler
+        type_checker(program).show.println
 
     print_errors_and_warnings(get_errors_and_warnings())
     println("done")
@@ -116,7 +117,7 @@ val prog_simple_let_var = Let(Ident("foo"), Num(42), Variable("foo"))
 val prog_arithmatic = ESub(EMult(EAdd(Num(4), Num(2)), Num(12)), Num(3))
 
 
-
+val prog_unass_var = Variable("test")
 // actual programs
 
 val prog_fact = 
@@ -137,7 +138,18 @@ val prog_fact =
 
 
 
-
+val prog_lex_vs_dyn = 
+    Let (Ident("d"), Num(2),
+        Letrec(Ident("f"), 
+                Lambda(Ident("x"), 
+                        EAdd(Variable("x"), 
+                        Variable("d"))
+                      ),
+              Let(Ident("d"), Num(2),
+                  Apply(Variable("f"), Num(2)) 
+                )
+              )
+        )
 
 
 

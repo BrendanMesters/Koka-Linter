@@ -54,54 +54,44 @@ fun variable_scope_linter (inp: expression) : <div, exn, errors-and-warnings, si
             variable_scope_linter(e2)
         _ -> ()
 
-    /*
-    scope_add("test", ETrue)
-    scope_get("test")
-    */
-
-        /*
-        fun scope_get(name) Just(test)
-            /*scopeState.find-maybe fn (elem: (string, expression)) : maybe<expression>
-                if elem.fst() == name then return Just(elem.snd)
-                return Nothing*/
-        fun scope_add(name: string, elem: expression) test := ETrue
-            /*tmp := Cons((name, elem), scopeState)
-            scopeState := tmp
-            tmp := Nil*/
-    match linter(EFalse)
-        Just(v) -> printexpr(v)*/
-
 
 /*
-type patern
-    Ident (name: string)
-    NullPat
-    Patpair (p1: patern, p2: patern)
-
-type expression
-    Num (n: int)
-    EFalse
-    ETrue
-    Variable    (name: string)
-    Lambda      (arg: patern, body: expression)
-    If          (cond: expression, thus: expression, otherwise: expression)
-    MLpair      (e1: expression, e2: expression)
-    Apply       (e1: expression, e2: expression)
-    Let         (arg: patern, arg_val: expression, body: expression)
-    Letrec      (arg: patern, arg_val: expression, body: expression)
-
-    /*
-    Expantion of the expression type to allow number operations, as this isn't possible when
-    following the abstract data types laid out in the origional paper
-    */
-    EMult        (e1: expression, e2: expression)
-    EAdd         (e1: expression, e2: expression)
-    ESub         (e1: expression, e2: expression)
+Substitutes variables with their assigned variable in scope. Ignores any variable present in the `shadow` list
 */
+fun substitute(inp: expression, shadow: list<string> = Nil): <div, exn, errors-and-warnings, complex_scope> expression
+    match inp
+        Variable(name) ->
+            if shadow.any(fn (v) v == name)
+            then
+                Variable(name)
+            else
+                get(name) 
+        Lambda (arg, body) ->
+            val nbody = substitute(body, [arg.patterns_to_string, shadow].concat)
+            Lambda(arg, nbody)
+        If (cond, thus, otherwise) -> If(cond.substitute(shadow), thus.substitute(shadow), otherwise.substitute(shadow))
+        MLpair(e1, e2) -> MLpair(e1.substitute(shadow), e2.substitute(shadow))
+        Apply(func, inp_vals) -> Apply(func.substitute(shadow), inp_vals.substitute(shadow))
+        Let (arg, arg_vals, body) ->
+            val n_arg_vals = arg_vals.substitute(shadow)
+            val n_body = body.substitute([arg.patterns_to_string, shadow].concat)
+            Let(arg, n_arg_vals, n_body)
+        Letrec (arg, arg_vals, body) ->
+            val n_arg_vals = arg_vals.substitute([arg.patterns_to_string, shadow].concat)
+            val n_body = body.substitute([arg.patterns_to_string, shadow].concat)
+            Letrec(arg, n_arg_vals, n_body)
+        Equals(e1, e2) -> Equals(e1.substitute(shadow), e1.substitute(shadow))
+        EMult(e1, e2) -> EMult(e1.substitute(shadow), e1.substitute(shadow))
+        EAdd(e1, e2) -> EAdd(e1.substitute(shadow), e1.substitute(shadow))
+        ESub(e1, e2) -> ESub(e1.substitute(shadow), e1.substitute(shadow))
+        _ -> inp
+
+
+
 /*
 Lints a piece of code to see if all the applications of functionality use the correct expression type.
 */
-fun variable_type_linter (inp: expression) : <div, exn, errors-and-warnings, complex_scope, console>  expression
+fun interpreter (inp: expression) : <div, exn, errors-and-warnings, complex_scope, console> expression
     match inp
         Num (n: int) -> Num(n)
         EFalse -> EFalse
@@ -109,36 +99,38 @@ fun variable_type_linter (inp: expression) : <div, exn, errors-and-warnings, com
         Variable    (name: string) -> 
             if !scope_contains(name) 
             then 
+                inp
+                /*
                 add_error("Variable '" ++ name ++ "' was not in scope")
                 Null
+                */
             else
                 get(name)
         Lambda      (arg: patern, body: expression) -> 
-            //add_warning ("Unapplied Lambda found with args {" ++ arg.show ++ "} and body {" ++ body.show ++ "}")
-            inp
+            // We want to shadow the arguments from the current scope and then substitute the current scope
+            Lambda(arg, body.substitute(arg.patterns_to_string))
         If          (cond: expression, thus: expression, otherwise: expression) -> 
             var condition := False
-            match variable_type_linter(cond)
+            match interpreter(cond)
                 EFalse -> condition := False
                 ETrue -> condition := True
-            if condition then thus.variable_type_linter else otherwise.variable_type_linter
+            if condition then thus.interpreter else otherwise.interpreter
             /*
-            val th = variable_type_linter(thus)
-            val oth = variable_type_linter(otherwise)
+            val th = interpreter(thus)
+            val oth = interpreter(otherwise)
             if condition then th else oth
             */
         MLpair      (e1: expression, e2: expression) -> 
-            MLpair(variable_type_linter(e1), variable_type_linter(e2))
+            MLpair(interpreter(e1), interpreter(e2))
         Apply       (func: expression, inp_vals: expression) ->
-            match func
+            match func.interpreter
                 Lambda (args, body) ->
                     val old_scope = get_state()
                     // lets hope that this next line does actually work... it at least doesn't throw errors
-                    add_patterns_and_expressions(args, inp_vals).foreach(fn ((name, value)) { add(name, value.variable_type_linter)})
-                    val retval = body.variable_type_linter
+                    add_patterns_and_expressions(args, inp_vals).foreach(fn ((name, value)) { add(name, value.interpreter)})
+                    val retval = body.interpreter
                     set_state(old_scope)
                     retval
-                Variable (name) -> Apply (variable_type_linter(func), inp_vals).variable_type_linter
                 other -> 
                     add_error("The first argument of function application was not a function but was {" ++ other.show ++ "}")
                     Null
@@ -146,24 +138,24 @@ fun variable_type_linter (inp: expression) : <div, exn, errors-and-warnings, com
         Let         (arg: patern, arg_val: expression, body: expression) ->
             val old_scope = get_state()
             // lets hope that this next line does actually work... it at least doesn't throw errors
-            add_patterns_and_expressions(arg, arg_val).foreach(fn ((name, value)) { add(name, value.variable_type_linter)})
-            val retval = body.variable_type_linter
+            add_patterns_and_expressions(arg, arg_val).foreach(fn ((name, value)) { add(name, value.interpreter)})
+            val retval = body.interpreter
             set_state(old_scope)
             retval
         Letrec      (arg: patern, arg_val: expression, body: expression) ->
             val old_scope = get_state()
             // lets hope that this next line does actually work... it at least doesn't throw errors
-            add_patterns_and_expressions(arg, arg_val).foreach(fn ((name, value)) { add(name, value.variable_type_linter)})
-            val retval = body.variable_type_linter
+            add_patterns_and_expressions(arg, arg_val).foreach(fn ((name, value)) { add(name, value.interpreter)})
+            val retval = body.interpreter
             set_state(old_scope)
             retval
         Equals      (e1: expression, e2: expression) ->
-            match (e1.variable_type_linter, e2.variable_type_linter)
+            match (e1.interpreter, e2.interpreter)
                 (Num(n1), Num(n2)) -> if n1 == n2 then ETrue else EFalse
                 (EFalse, EFalse) -> ETrue
                 (ETrue, ETrue) -> ETrue
                 (MLpair(a1, a2), MLpair(b1, b2)) -> 
-                    match (Equals(a1, b1).variable_type_linter, Equals(a2, b2).variable_type_linter)
+                    match (Equals(a1, b1).interpreter, Equals(a2, b2).interpreter)
                         (ETrue, ETrue) -> ETrue
                         _ -> EFalse
                 (Null, _) -> Null
@@ -175,19 +167,19 @@ fun variable_type_linter (inp: expression) : <div, exn, errors-and-warnings, com
         following the abstract data types laid out in the origional paper
         */
         EMult        (e1: expression, e2: expression) ->
-            match (e1.variable_type_linter, e2.variable_type_linter)
+            match (e1.interpreter, e2.interpreter)
                 (Num(n1), Num(n2)) -> Num(n1 * n2)
                 (val1, val2) -> 
                     add_error("Arithmatic operation didn't have two numbers as input, instead it found {" ++ val1.show ++ "} and {" ++ val2.show ++ "}")
                     Null
         EAdd         (e1: expression, e2: expression) ->
-            match (e1.variable_type_linter, e2.variable_type_linter)
+            match (e1.interpreter, e2.interpreter)
                 (Num(n1), Num(n2)) -> Num(n1 + n2)
                 (val1, val2) -> 
                     add_error("Arithmatic operation didn't have two numbers as input, instead it found {" ++ val1.show ++ "} and {" ++ val2.show ++ "}")
                     Null
         ESub         (e1: expression, e2: expression) ->
-            match (e1.variable_type_linter, e2.variable_type_linter)
+            match (e1.interpreter, e2.interpreter)
                 (Num(n1), Num(n2)) -> Num(n1 - n2)
                 (val1, val2) -> 
                     add_error("Arithmatic operation didn't have two numbers as input, instead it found {" ++ val1.show ++ "} and {" ++ val2.show ++ "}")
@@ -196,3 +188,153 @@ fun variable_type_linter (inp: expression) : <div, exn, errors-and-warnings, com
         Null -> 
             add_error("Null value found, this is an error value")
             Null
+
+
+fun type_checker(inp: expression) : <div, exn, errors-and-warnings, polymorphic_scope<expr_val>, console>  expr_val
+    match inp
+        Num -> ENumber
+        EFalse -> EBoolean
+        ETrue -> EBoolean
+        Variable(name) -> pget(name)
+        //Lambda ->
+        If (cond, thus, otherwise) ->
+            if cond.type_checker != EBoolean then add_error("Conditional in if statement is not of type boolean")
+            val thus_type = thus.type_checker
+            val otherwise_type = otherwise.type_checker
+            if thus_type != otherwise_type then add_error("Then and Else branch of if statement do not have the same type")
+            thus_type
+        MLpair(e1, e2) -> EPair(e1.type_checker, e2.type_checker)
+        //Apply(func, arg_vals) ->
+        //Let (arg, arg_val, body) ->
+
+        _ -> ENumber
+
+fun test_substitute(inp: expression, shadow: list<string> = Nil): <div, exn, errors-and-warnings, polymorphic_scope<expression>> expression
+    match inp
+        Variable(name) ->
+            if shadow.any(fn (v) v == name)
+            then
+                Variable(name)
+            else
+                pget(name) 
+        Lambda (arg, body) ->
+            val nbody = test_substitute(body, [arg.patterns_to_string, shadow].concat)
+            Lambda(arg, nbody)
+        If (cond, thus, otherwise) -> If(cond.test_substitute(shadow), thus.test_substitute(shadow), otherwise.test_substitute(shadow))
+        MLpair(e1, e2) -> MLpair(e1.test_substitute(shadow), e2.test_substitute(shadow))
+        Apply(func, inp_vals) -> Apply(func.test_substitute(shadow), inp_vals.test_substitute(shadow))
+        Let (arg, arg_vals, body) ->
+            val n_arg_vals = arg_vals.test_substitute(shadow)
+            val n_body = body.test_substitute([arg.patterns_to_string, shadow].concat)
+            Let(arg, n_arg_vals, n_body)
+        Letrec (arg, arg_vals, body) ->
+            val n_arg_vals = arg_vals.test_substitute([arg.patterns_to_string, shadow].concat)
+            val n_body = body.test_substitute([arg.patterns_to_string, shadow].concat)
+            Letrec(arg, n_arg_vals, n_body)
+        Equals(e1, e2) -> Equals(e1.test_substitute(shadow), e1.test_substitute(shadow))
+        EMult(e1, e2) -> EMult(e1.test_substitute(shadow), e1.test_substitute(shadow))
+        EAdd(e1, e2) -> EAdd(e1.test_substitute(shadow), e1.test_substitute(shadow))
+        ESub(e1, e2) -> ESub(e1.test_substitute(shadow), e1.test_substitute(shadow))
+        _ -> Null
+ 
+
+fun test_interpreter (inp: expression) : <div, exn, errors-and-warnings, polymorphic_scope<expression>, console> expression
+    match inp
+        //Num (n: int) -> Num(n)
+        
+        EFalse -> EFalse
+        ETrue -> ETrue
+        Variable    (name: string) -> 
+            if !pscope_contains(name) 
+            then 
+                inp
+                /*
+                add_error("Variable '" ++ name ++ "' was not in scope")
+                Null
+                */
+            else
+                pget(name)
+        Lambda      (arg: patern, body: expression) -> 
+            // We want to shadow the arguments from the current scope and then substitute the current scope
+            Lambda(arg, body.test_substitute(arg.patterns_to_string))
+        If          (cond: expression, thus: expression, otherwise: expression) -> 
+            var condition := False
+            match test_interpreter(cond)
+                EFalse -> condition := False
+                ETrue -> condition := True
+            if condition then thus.test_interpreter else otherwise.test_interpreter
+            /*
+            val th = interpreter(thus)
+            val oth = interpreter(otherwise)
+            if condition then th else oth
+            */
+        MLpair      (e1: expression, e2: expression) -> 
+            MLpair(test_interpreter(e1), test_interpreter(e2))
+        Apply       (func: expression, inp_vals: expression) ->
+            match func.test_interpreter
+                Lambda (args, body) ->
+                    val old_scope = pget_state()
+                    // lets hope that this next line does actually work... it at least doesn't throw errors
+                    add_patterns_and_expressions(args, inp_vals).foreach(fn ((name, value)) { padd(name, value.test_interpreter)})
+                    val retval = body.test_interpreter
+                    pset_state(old_scope)
+                    retval
+                other -> 
+                    add_error("The first argument of function application was not a function but was {" ++ other.show ++ "}")
+                    Null
+
+        Let         (arg: patern, arg_val: expression, body: expression) ->
+            val old_scope = pget_state()
+            // lets hope that this next line does actually work... it at least doesn't throw errors
+            add_patterns_and_expressions(arg, arg_val).foreach(fn ((name, value)) { padd(name, value.test_interpreter)})
+            val retval = body.test_interpreter
+            pset_state(old_scope)
+            retval
+        Letrec      (arg: patern, arg_val: expression, body: expression) ->
+            val old_scope = pget_state()
+            // lets hope that this next line does actually work... it at least doesn't throw errors
+            add_patterns_and_expressions(arg, arg_val).foreach(fn ((name, value)) { padd(name, value.test_interpreter)})
+            val retval = body.test_interpreter
+            pset_state(old_scope)
+            retval
+        Equals      (e1: expression, e2: expression) ->
+            match (e1.test_interpreter, e2.test_interpreter)
+                (Num(n1), Num(n2)) -> if n1 == n2 then ETrue else EFalse
+                (EFalse, EFalse) -> ETrue
+                (ETrue, ETrue) -> ETrue
+                (MLpair(a1, a2), MLpair(b1, b2)) -> 
+                    match (Equals(a1, b1).test_interpreter, Equals(a2, b2).test_interpreter)
+                        (ETrue, ETrue) -> ETrue
+                        _ -> EFalse
+                (Null, _) -> Null
+                (_, Null) -> Null
+                _ -> EFalse
+
+        /*
+        Expantion of the expression type to allow number operations, as this isn't possible when
+        following the abstract data types laid out in the origional paper
+        */
+        EMult        (e1: expression, e2: expression) ->
+            match (e1.test_interpreter, e2.test_interpreter)
+                (Num(n1), Num(n2)) -> Num(n1 * n2)
+                (val1, val2) -> 
+                    add_error("Arithmatic operation didn't have two numbers as input, instead it found {" ++ val1.show ++ "} and {" ++ val2.show ++ "}")
+                    Null
+        EAdd         (e1: expression, e2: expression) ->
+            match (e1.test_interpreter, e2.test_interpreter)
+                (Num(n1), Num(n2)) -> Num(n1 + n2)
+                (val1, val2) -> 
+                    add_error("Arithmatic operation didn't have two numbers as input, instead it found {" ++ val1.show ++ "} and {" ++ val2.show ++ "}")
+                    Null
+        ESub         (e1: expression, e2: expression) ->
+            match (e1.test_interpreter, e2.test_interpreter)
+                (Num(n1), Num(n2)) -> Num(n1 - n2)
+                (val1, val2) -> 
+                    add_error("Arithmatic operation didn't have two numbers as input, instead it found {" ++ val1.show ++ "} and {" ++ val2.show ++ "}")
+                    Null
+
+        Null -> 
+            add_error("Null value found, this is an error value")
+            Null
+            
+        _ -> Null

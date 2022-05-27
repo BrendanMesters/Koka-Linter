@@ -80,10 +80,10 @@ fun substitute(inp: expression, shadow: list<string> = Nil): <div, exn, errors-a
             val n_arg_vals = arg_vals.substitute([arg.patterns_to_string, shadow].concat)
             val n_body = body.substitute([arg.patterns_to_string, shadow].concat)
             Letrec(arg, n_arg_vals, n_body)
-        Equals(e1, e2) -> Equals(e1.substitute(shadow), e1.substitute(shadow))
-        EMult(e1, e2) -> EMult(e1.substitute(shadow), e1.substitute(shadow))
-        EAdd(e1, e2) -> EAdd(e1.substitute(shadow), e1.substitute(shadow))
-        ESub(e1, e2) -> ESub(e1.substitute(shadow), e1.substitute(shadow))
+        Equals(e1, e2) -> Equals(e1.substitute(shadow), e2.substitute(shadow))
+        EMult(e1, e2) -> EMult(e1.substitute(shadow), e2.substitute(shadow))
+        EAdd(e1, e2) -> EAdd(e1.substitute(shadow), e2.substitute(shadow))
+        ESub(e1, e2) -> ESub(e1.substitute(shadow), e2.substitute(shadow))
         _ -> inp
 
 
@@ -92,6 +92,7 @@ fun substitute(inp: expression, shadow: list<string> = Nil): <div, exn, errors-a
 Lints a piece of code to see if all the applications of functionality use the correct expression type.
 */
 fun interpreter (inp: expression) : <div, exn, errors-and-warnings, complex_scope, console> expression
+    println("    interpreter: {" ++ inp.show ++ "}")
     match inp
         Num (n: int) -> Num(n)
         EFalse -> EFalse

@@ -39,10 +39,10 @@ val functie_jetser2 = Lambda (Patpair(Ident ("variable"), Ident("not a variable 
 val what_to_lint = 
     [
         False, // complex-linter/linter
-        True,  // simple-linter/variable_scope_linter
-        True,  // simple-linter/interpreter
-        True, // WIP
-        True  // WIP
+        False,  // simple-linter/variable_scope_linter
+        False,  // simple-linter/interpreter
+        True, // Poly_interp
+        False  // Poly_type_checker
     ]
 
 //  -= Main Code =-
@@ -58,7 +58,7 @@ fun main ()
     var tmp : list<(string, expression)> := Nil 
     
     
-    val program = prog_num
+    val program = prog_lex_vs_dyn
 
 
 
@@ -134,7 +134,7 @@ val prog_fact =
                     Apply(Variable("fact"), ESub(Variable("x"), Num(1)))
                 )
             )),
-        Apply(Variable("fact"), Num(69)))
+        Apply(Variable("fact"), Num(10)))
 
 
 
@@ -146,7 +146,7 @@ val prog_lex_vs_dyn =
                         EAdd(Variable("x"), 
                         Variable("d"))
                       ),
-              Let(Ident("d"), Num(2),
+              Let(Ident("d"), Num(1),
                   Apply(Variable("f"), Num(2)) 
                 )
               )

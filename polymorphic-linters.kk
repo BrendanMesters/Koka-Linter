@@ -20,8 +20,12 @@ import error-warning-handler
 Substitute the current scope in the input expression (`inp`),
 omitting any elements with a name present in `shadow`
 */
-fun test_substitute(inp: expression, shadow: list<string> = Nil): <div, exn, errors-and-warnings, polymorphic_scope<expression>> expression
+fun test_substitute(inp: expression, shadow: list<string> = Nil): <div, exn, errors-and-warnings, polymorphic_scope<expression>, console> expression
+    //println("    test_substitute: {" ++ inp.show ++ "} \n shadow: {" ++ shadow.show ++ "}")
     match inp
+        Num -> inp
+        EFalse -> inp
+        ETrue -> inp
         Variable(name) ->
             if shadow.any(fn (v) v == name)
             then
@@ -42,10 +46,13 @@ fun test_substitute(inp: expression, shadow: list<string> = Nil): <div, exn, err
             val n_arg_vals = arg_vals.test_substitute([arg.patterns_to_string, shadow].concat)
             val n_body = body.test_substitute([arg.patterns_to_string, shadow].concat)
             Letrec(arg, n_arg_vals, n_body)
-        Equals(e1, e2) -> Equals(e1.test_substitute(shadow), e1.test_substitute(shadow))
-        EMult(e1, e2) -> EMult(e1.test_substitute(shadow), e1.test_substitute(shadow))
-        EAdd(e1, e2) -> EAdd(e1.test_substitute(shadow), e1.test_substitute(shadow))
-        ESub(e1, e2) -> ESub(e1.test_substitute(shadow), e1.test_substitute(shadow))
+        Equals(e1, e2) -> Equals(e1.test_substitute(shadow), e2.test_substitute(shadow))
+        EMult(e1, e2) -> EMult(e1.test_substitute(shadow), e2.test_substitute(shadow))
+        EAdd(e1, e2) -> EAdd(e1.test_substitute(shadow), e2.test_substitute(shadow))
+        ESub(e1, e2) -> ESub(e1.test_substitute(shadow), e2.test_substitute(shadow))
+        // TODO Think of whether or not substitution should happen under closure
+        //Closure(exp) -> exp.test_substitute(shadow)
+        Null -> inp
         _ -> Null
  
 
@@ -99,14 +106,22 @@ fun type_checker(inp: expression) : <div, exn, errors-and-warnings, polymorphic_
             thus_type
         MLpair(e1, e2) -> EPair(e1.type_checker, e2.type_checker)
         //Apply(func, arg_vals) ->
-        //Let (arg, arg_val, body) ->
+        Let (arg, arg_val, body) ->
+            val old_scope = pget_state()
+            args_and_vals(arg, arg_val, type_checker)
+            val retval = body.type_checker
+            pset_state(old_scope)
+            retval
+//        Letrec (arg, arg_val, body) ->
+
 
         _ -> ENumber
 
 
 fun test_interpreter (inp: expression) : <div, exn, errors-and-warnings, polymorphic_scope<expression>, console> expression
+    println("     test_interpreter: {" ++ inp.show ++ "}")
     match inp
-        //Num (n: int) -> Num(n)
+        Num (n: int) -> Num(n)
         
         EFalse -> EFalse
         ETrue -> ETrue
@@ -159,7 +174,7 @@ fun test_interpreter (inp: expression) : <div, exn, errors-and-warnings, polymor
         Letrec      (arg: patern, arg_val: expression, body: expression) ->
             val old_scope = pget_state()
             // lets hope that this next line does actually work... it at least doesn't throw errors
-            add_patterns_and_expressions(arg, arg_val).foreach(fn ((name, value)) { padd(name, value.test_interpreter)})
+            add_patterns_and_expressions(arg, arg_val).foreach(fn ((name, value)) { padd(name, value)})
             val retval = body.test_interpreter
             pset_state(old_scope)
             retval
@@ -184,23 +199,26 @@ fun test_interpreter (inp: expression) : <div, exn, errors-and-warnings, polymor
             match (e1.test_interpreter, e2.test_interpreter)
                 (Num(n1), Num(n2)) -> Num(n1 * n2)
                 (val1, val2) -> 
-                    add_error("Arithmatic operation didn't have two numbers as input, instead it found {" ++ val1.show ++ "} and {" ++ val2.show ++ "}")
+                    add_error("Arithmatic operation mult didn't have two numbers as input, instead it found {" ++ val1.show ++ "} and {" ++ val2.show ++ "}")
                     Null
         EAdd         (e1: expression, e2: expression) ->
             match (e1.test_interpreter, e2.test_interpreter)
                 (Num(n1), Num(n2)) -> Num(n1 + n2)
                 (val1, val2) -> 
-                    add_error("Arithmatic operation didn't have two numbers as input, instead it found {" ++ val1.show ++ "} and {" ++ val2.show ++ "}")
+                    add_error("Arithmatic operation add didn't have two numbers as input, instead it found {" ++ val1.show ++ "} and {" ++ val2.show ++ "}")
                     Null
         ESub         (e1: expression, e2: expression) ->
             match (e1.test_interpreter, e2.test_interpreter)
                 (Num(n1), Num(n2)) -> Num(n1 - n2)
                 (val1, val2) -> 
-                    add_error("Arithmatic operation didn't have two numbers as input, instead it found {" ++ val1.show ++ "} and {" ++ val2.show ++ "}")
+                    add_error("Arithmatic operation sub didn't have two numbers as input, instead it found {" ++ val1.show ++ "} and {" ++ val2.show ++ "}")
                     Null
-
+        //Closure(exp) -> exp.test_interpreter
         Null -> 
             add_error("Null value found, this is an error value")
             Null
             
-        _ -> Null
+        _ -> 
+            add_error("Input {" ++ inp.show ++ "} was not processed in `test_interpreter`")
+            Null
+

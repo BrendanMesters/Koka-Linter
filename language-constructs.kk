@@ -36,6 +36,9 @@ type expression
     EAdd         (e1: expression, e2: expression)
     ESub         (e1: expression, e2: expression)
 
+    // Binds a v
+    // Closure        (exp: expression, scope: list<...>)
+    
     // -= Error Value =-
     Null
 
@@ -45,6 +48,11 @@ type expr_val
     ENumber
     EBoolean
     EPair(e1: expr_val, e2: expr_val)
+    EUnevaluatedFunction(arg: patern, body: expression)
+    //stuff for testing with jack
+    EAny
+    // error value
+    ENull 
 
 
 fun show(pat: patern) : total string
@@ -52,6 +60,7 @@ fun show(pat: patern) : total string
         Ident (name) -> "Pattern: '" ++ name ++ "'"
         NullPat -> "NULLPat"
         Patpair (p1, p2) -> "Patpair: ({" ++ p1.show ++ "}, {" ++ p2.show ++ "})"
+
 
 fun show(exp: expression) : total string
     match exp
@@ -70,6 +79,7 @@ fun show(exp: expression) : total string
         EMult       (e1: expression, e2: expression) -> "Arithmatic: Multiply on: {" ++ e1.show ++ "} and {" ++ e2.show ++ "}"
         EAdd        (e1: expression, e2: expression) -> "Arithmatic: Addition on: {" ++ e1.show ++ "} and {" ++ e2.show ++ "}"
         ESub        (e1: expression, e2: expression) -> "Arithmatic: Subtraction on: {" ++ e1.show ++ "} and {" ++ e2.show ++ "}"
+        //Closure     (exp: expression) -> "A bound expression of {" ++ exp.show ++ "}"
         Null                                         -> "Null expression - This is an Error Value"
         _ -> "Not a valid expression, note this should never be reached and is just here to catch possibly otherwise very obscure bugs that might be introduced in the future :-D"
 
@@ -77,6 +87,9 @@ fun show(exp: expr_val) : total string
     match exp
         ENumber -> "Expression type Number"
         EBoolean -> "Expression type Boolean"
+        ENull -> "Expression error value ENull"
+        EUnevaluatedFunction (arg, body) -> "Function type value storing the function {" ++ arg.show ++ "}, {" ++ body.show ++ "}"
+        EAny -> "Expression type EAny"
         EPair(e1, e2) -> "Expression pair of {" ++ e1.show ++ "} and {" ++ e2.show ++ "}"
 
 fun (==)(e1:expr_val, e2:expr_val) : <div> bool

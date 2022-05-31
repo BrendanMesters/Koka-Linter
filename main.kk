@@ -53,12 +53,12 @@ fun maybeq(v1: maybe<bool>, v2: maybe<bool>) : bool
         (Just(a), Just(b)) -> a == b
         _ -> False
 
-fun main () 
+fun main(): <console, div, exn> () 
     var test: expression := EFalse
     var tmp : list<(string, expression)> := Nil 
     
     
-    val program = prog_lex_vs_dyn
+    val program = prog_fact
 
 
 
@@ -90,6 +90,7 @@ fun main ()
     if (what_to_lint[4]).maybeq(Just (True))
     then
         with concretely_type_based_scope_handler
+        with type_unsure_function_handler
         type_checker(program).show.println
 
     print_errors_and_warnings(get_errors_and_warnings())

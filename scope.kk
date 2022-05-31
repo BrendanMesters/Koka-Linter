@@ -7,24 +7,31 @@ import language-constructs
 
 effect polymorphic_scope<a>
     fun pscope_contains(name: string) : bool
-    fun pget(name: string) : a
+    fun pget(name: string) : closure<a>
     fun padd(name: string, value: a) : ()
-    fun pget_state() : list<(string, a)>
-    fun pset_state(newState: list<(string, a)>) : ()
+    fun padd_with_closure(name: string, value: expression, clos: list<(string, closure<a>)>) : ()
+    fun pget_state() : list<(string, closure<a>)>
+    fun pset_state(newState: list<(string, closure<a>)>) : ()
+
+type closure<a>
+    Direct_value(value: a)
+    Actual_closure(value: expression, closed_scope: list<(string, closure<a>)>)
 
 
-fun concretely_type_based_scope_handler(fun_to_exec: () -> <polymorphic_scope<expr_val>,exn|e> a , init_val : list<(string, expr_val)> = Nil) : <exn|e> a
+fun concretely_type_based_scope_handler(fun_to_exec: () -> <polymorphic_scope<expr_val>,exn|e> a) : <exn|e> a
  
-    var scopeState := init_val
+    var scopeState: list<(string, closure<expr_val>)> := Nil
+    //var closures: list<Either((string, a), closure<(string, a)>)>
+    //type closure<(string, a)> = (expr, List<Either((string, a), closure<string, a>)>)
     //var test: expression := EFalse
     with handler
         fun pscope_contains(name: string) 
-            val predicate = fn (elem: (string, expr_val)) : bool {
+            val predicate = fn (elem: (string, closure<expr_val>)) : bool {
                 if elem.fst() == name then return True
                 False }
             scopeState.any ( predicate)
         fun pget(name) 
-            match scopeState.find-maybe fn (elem: (string, expr_val)) : maybe<expr_val> {
+            match scopeState.find-maybe fn (elem: (string, closure<expr_val>)) : maybe<closure<expr_val>> {
                 if elem.fst() == name then return Just(elem.snd)
                 Nothing }
                 Just(v) -> return v
@@ -32,11 +39,11 @@ fun concretely_type_based_scope_handler(fun_to_exec: () -> <polymorphic_scope<ex
             /*scopeState.find-maybe fn (elem: (string, expression)) : exn expression
                 if elem.fst() == name then return elem.snd
                 throw("Variable \'" ++ name ++ "\' not in scope.")*/
-        fun padd(name: string, elem: expr_val) scopeState := Cons((name, elem), scopeState)
+        fun padd(name: string, elem: expr_val) scopeState := Cons((name, Direct_value(elem)), scopeState)
+        fun padd_with_closure(name, elem, clos) scopeState := Cons((name, Actual_closure(elem, clos)), scopeState)
         fun pget_state() return scopeState
-        fun pset_state(newState) scopeState := newState
+        fun pset_state(newState:list<(string, closure<expr_val>)>) scopeState := newState
     fun_to_exec()
-
 
 
 
@@ -46,12 +53,12 @@ fun concretely_expression_based_scope_handler(fun_to_exec: () -> <polymorphic_sc
     //var test: expression := EFalse
     with handler
         fun pscope_contains(name: string) 
-            val predicate = fn (elem: (string, expression)) : bool {
+            val predicate = fn (elem: (string, closure<expression>)) : bool {
                 if elem.fst() == name then return True
                 False }
             scopeState.any ( predicate)
         fun pget(name) 
-            match scopeState.find-maybe fn (elem: (string, expression)) : maybe<expression> {
+            match scopeState.find-maybe fn (elem: (string, closure<expression>)) : maybe<closure<expression>> {
                 if elem.fst() == name then return Just(elem.snd)
                 Nothing }
                 Just(v) -> return v
@@ -59,7 +66,8 @@ fun concretely_expression_based_scope_handler(fun_to_exec: () -> <polymorphic_sc
             /*scopeState.find-maybe fn (elem: (string, expression)) : exn expression
                 if elem.fst() == name then return elem.snd
                 throw("Variable \'" ++ name ++ "\' not in scope.")*/
-        fun padd(name: string, elem: expression) scopeState := Cons((name, elem), scopeState)
+        fun padd(name: string, elem: expression) scopeState := Cons((name, Direct_value(elem)), scopeState)
+        fun padd_with_closure(name, elem, clos) scopeState := Cons((name, Actual_closure(elem, clos)), scopeState)
         fun pget_state() return scopeState
         fun pset_state(newState) scopeState := newState
     fun_to_exec()

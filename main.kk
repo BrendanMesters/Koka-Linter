@@ -26,14 +26,17 @@ import simple-linter
 import polymorphic-linters
     
 
-//  -= Misc Variables [-
-
-val testbar = "je moeder"
-
-val functie_jetser = Lambda (Patpair(Ident ("variable"), Ident("not a variable ;-)")), MLpair(Num (420), Num (69)))
-val functie_jetser2 = Lambda (Patpair(Ident ("variable"), Ident("not a variable ;-)")), Variable("not a variable ;-)"))
+fun main()
+    ()
 
 
+
+
+
+/*
+
+
+        -= OLD CODE =-
 
 
 val what_to_lint = 
@@ -41,8 +44,8 @@ val what_to_lint =
         False, // complex-linter/linter
         False,  // simple-linter/variable_scope_linter
         False,  // simple-linter/interpreter
-        True, // Poly_interp
-        False  // Poly_type_checker
+        False, // Poly_interp
+        True  // Poly_type_checker
     ]
 
 //  -= Main Code =-
@@ -96,7 +99,7 @@ fun main(): <console, div, exn> ()
     print_errors_and_warnings(get_errors_and_warnings())
     println("done")
         
-
+*/
 
 
 
@@ -139,6 +142,9 @@ val prog_fact =
 
 
 
+// In lexical scoping it should eval to 4 
+// where dynamic scoping gives us 3
+// (we want lexical)
 
 val prog_lex_vs_dyn = 
     Let (Ident("d"), Num(2),
@@ -151,15 +157,7 @@ val prog_lex_vs_dyn =
                   Apply(Variable("f"), Num(2)) 
                 )
               )
-        )
-
-
-
-
-
-
-
-
+    )
 
 
 

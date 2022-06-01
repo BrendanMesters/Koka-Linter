@@ -2,7 +2,22 @@ import scope
 import language-constructs
 import error-warning-handler
 
+/*
 
+
+CURRENT TODO!!!!
+
+Lambda and application in the type_checker still need
+to be implemented.
+
+Furthermore I still need to generalize my code for both 
+analyzers and interpreters with the use of effect handlers.
+BEFORE I do that however I should probably identify
+the similarities between the two applications and reason
+about their inherrent need or if this is just a coincidence
+since I'm only using TWO applications currently.
+
+*/
 
 
 /*
@@ -20,6 +35,7 @@ import error-warning-handler
 Substitute the current scope in the input expression (`inp`),
 omitting any elements with a name present in `shadow`
 */
+
 fun test_substitute(inp: expression, shadow: list<string> = Nil): <div, exn, errors-and-warnings, polymorphic_scope<expression>, console> expression
     //println("    test_substitute: {" ++ inp.show ++ "} \n shadow: {" ++ shadow.show ++ "}")
     match inp

@@ -21,8 +21,8 @@ import error-warning-handler
 
 
 // Running Code
-import complex-linter
-import simple-linter
+//import complex-linter
+//import simple-linter
 import polymorphic-linters
     
 
@@ -30,8 +30,8 @@ import polymorphic-linters
 
 val testbar = "je moeder"
 
-val functie_jetser = Lambda (Patpair(Ident ("variable"), Ident("not a variable ;-)")), MLpair(Num (420), Num (69)))
-val functie_jetser2 = Lambda (Patpair(Ident ("variable"), Ident("not a variable ;-)")), Variable("not a variable ;-)"))
+//val functie_jetser = Lambda (Patpair(Ident ("variable"), Ident("not a variable ;-)")), MLpair(Num (420), Num (69)))
+//val functie_jetser2 = Lambda (Patpair(Ident ("variable"), Ident("not a variable ;-)")), Variable("not a variable ;-)"))
 
 
 
@@ -41,8 +41,8 @@ val what_to_lint =
         False, // complex-linter/linter
         False,  // simple-linter/variable_scope_linter
         False,  // simple-linter/interpreter
-        True, // Poly_interp
-        False  // Poly_type_checker
+        False, // Poly_interp
+        True  // Poly_type_checker
     ]
 
 //  -= Main Code =-
@@ -64,7 +64,7 @@ fun main(): <console, div, exn> ()
 
     with errors_and_warnings_handler
 
-
+/*
 
     if (what_to_lint[0]).maybeq(Just (True))
     then
@@ -82,7 +82,7 @@ fun main(): <console, div, exn> ()
     then
         with complex_scope_handeler
         interpreter(program).printexpr
-
+*/
     if (what_to_lint[3]).maybeq(Just (True))
     then
         with concretely_expression_based_scope_handler
@@ -90,7 +90,6 @@ fun main(): <console, div, exn> ()
     if (what_to_lint[4]).maybeq(Just (True))
     then
         with concretely_type_based_scope_handler
-        with type_unsure_function_handler
         type_checker(program).show.println
 
     print_errors_and_warnings(get_errors_and_warnings())
@@ -124,9 +123,10 @@ val prog_unass_var = Variable("test")
 
 val prog_fact = 
     Letrec( 
-        Ident("fact"),
+        Ident("fact"), 
+        EFunc(ENumber, ENumber),
         Lambda(
-            Ident("x"), 
+            Ident("x"), ENumber,
             If(
                 Equals( Variable("x"), Num(0) ),
                 Num(1),
@@ -142,8 +142,8 @@ val prog_fact =
 
 val prog_lex_vs_dyn = 
     Let (Ident("d"), Num(2),
-        Letrec(Ident("f"), 
-                Lambda(Ident("x"), 
+        Letrec(Ident("f"), EFunc(ENumber, ENumber),
+                Lambda(Ident("x"), ENumber,
                         EAdd(Variable("x"), 
                         Variable("d"))
                       ),

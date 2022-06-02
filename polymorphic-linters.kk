@@ -2,7 +2,22 @@ import scope
 import language-constructs
 import error-warning-handler
 
+/*
 
+
+CURRENT TODO!!!!
+
+Lambda and application in the type_checker still need
+to be implemented.
+
+Furthermore I still need to generalize my code for both 
+analyzers and interpreters with the use of effect handlers.
+BEFORE I do that however I should probably identify
+the similarities between the two applications and reason
+about their inherrent need or if this is just a coincidence
+since I'm only using TWO applications currently.
+
+*/
 
 
 /*
@@ -20,6 +35,7 @@ import error-warning-handler
 Substitute the current scope in the input expression (`inp`),
 omitting any elements with a name present in `shadow`
 */
+
 fun test_substitute(inp: expression, shadow: list<string> = Nil): <div, exn, errors-and-warnings, polymorphic_scope<expression>, console> expression
     //println("    test_substitute: {" ++ inp.show ++ "} \n shadow: {" ++ shadow.show ++ "}")
     match inp
@@ -46,9 +62,9 @@ fun test_substitute(inp: expression, shadow: list<string> = Nil): <div, exn, err
                         pset_state(old_scope)
                         //retval
                         retval
-        Lambda (arg, body) ->
+        Lambda (arg, arg_type, body) ->
             val nbody = test_substitute(body, [arg.patterns_to_string, shadow].concat)
-            Lambda(arg, nbody)
+            Lambda(arg, arg_type, nbody)
         If (cond, thus, otherwise) -> If(cond.test_substitute(shadow), thus.test_substitute(shadow), otherwise.test_substitute(shadow))
         MLpair(e1, e2) -> MLpair(e1.test_substitute(shadow), e2.test_substitute(shadow))
         Apply(func, inp_vals) -> Apply(func.test_substitute(shadow), inp_vals.test_substitute(shadow))
@@ -56,10 +72,10 @@ fun test_substitute(inp: expression, shadow: list<string> = Nil): <div, exn, err
             val n_arg_vals = arg_vals.test_substitute(shadow)
             val n_body = body.test_substitute([arg.patterns_to_string, shadow].concat)
             Let(arg, n_arg_vals, n_body)
-        Letrec (arg, arg_vals, body) ->
+        Letrec (arg, arg_type, arg_vals, body) ->
             val n_arg_vals = arg_vals.test_substitute([arg.patterns_to_string, shadow].concat)
             val n_body = body.test_substitute([arg.patterns_to_string, shadow].concat)
-            Letrec(arg, n_arg_vals, n_body)
+            Letrec(arg, arg_type, n_arg_vals, n_body)
         Equals(e1, e2) -> Equals(e1.test_substitute(shadow), e2.test_substitute(shadow))
         EMult(e1, e2) -> EMult(e1.test_substitute(shadow), e2.test_substitute(shadow))
         EAdd(e1, e2) -> EAdd(e1.test_substitute(shadow), e2.test_substitute(shadow))
@@ -100,41 +116,15 @@ fun args_and_vals(pat: patern, vals: expression, converter: (expression) -> <pol
             args_and_vals(p2, e2, converter)
         _  -> ()
 
-
-
-//fun find_lambda_type(exp: expression, fun_type: expr_val): <div, exn, errors-and-warnings, polymorphic_scope<expr_val>, console>  (expr_val, expr_val)
-
-
-effect type_unsure_function
-    fun add_function(name: string): ()
-    // returns ENull if type mismatch otherwise the type offered
-    fun set_function(name: string, t: expr_val) : expr_val  
-    //fun contains_function(name: string) : bool
-
-
-fun type_unsure_function_handler(fun_to_exec: () -> <div, type_unsure_function|e> a): <div|e> a
-    var functions: list<(string, expr_val)> := Nil
-    with
-        fun add_function(name:string) functions := Cons((name, EAny), functions)
-        fun set_function(name, value)
-            match functions.find(fn (el) {el.fst == name})
-                Just((str, exp)) ->
-                    if exp == EAny
-                    then
-                        // sets the exp of functions with name `name` to `value` while leaving the others alone.
-                        functions := functions.map(fn (el) {if el.fst == name then (name, value) else el})
-                        value
-                    else if exp == value
-                    then
-                        value
-                    else
-                        // If the function already had a type and they don't match give an error.
-                        functions := functions.map(fn (el) {if el.fst == name then (name, ENull) else el})
-                        ENull
-
-                _ -> ENull
-        //fun contains_function(name) functions.any(fn (el) {el.fst == name})
-    fun_to_exec()
+fun args_and_types(pat: patern, typs: expression_type) : <polymorphic_scope<expression_type>, console|e> ()
+    println("in args_and_types with pat: " ++ pat.show ++ " and type:" ++ typs.show)
+    match (pat, typs)
+        (Ident(name), _) -> padd(name, typs)
+        (NullPat, _) -> ()
+        (Patpair(p1, p2), EPair(t1, t2)) ->
+            args_and_types(p1, t1)
+            args_and_types(p2, t2)
+        _ -> ()
 
 
 /*
@@ -145,15 +135,18 @@ fun type_unsure_function_handler(fun_to_exec: () -> <div, type_unsure_function|e
     code analysers as well as the interpreter.
 
 */
-
-fun type_checker(inp: expression) : <div, exn, errors-and-warnings, polymorphic_scope<expr_val>, type_unsure_function, console>  expr_val
+// type_checker(inp:expression, expected: type, variable)
+fun type_checker(inp: expression) : <div, exn, errors-and-warnings, polymorphic_scope<expression_type>, console>  expression_type
     println(inp.show)
     match inp
         Num -> ENumber
         EFalse -> EBoolean
         ETrue -> EBoolean
         Variable(name) -> 
-        //Lambda ->
+            //First check for type unsure functions
+
+
+            //Then check for elements in scope
             if !pscope_contains(name) 
             then 
                 throw("unbound variable '" ++ name ++ "' found.")
@@ -179,19 +172,24 @@ fun type_checker(inp: expression) : <div, exn, errors-and-warnings, polymorphic_
                         //retval
                         retval
 
-        Lambda(arg, body) -> 
+        Lambda(arg, arg_type, body) -> 
             println("in lambda in type_checker")
-            EUnevaluatedFunction(arg, body)
+            args_and_types(arg, arg_type)
+            val btype = body.type_checker
+            println("-= lambda return type is " ++ btype.show)
+            EFunc(arg_type, btype)
         If (cond, thus, otherwise) ->
             if cond.type_checker != EBoolean then add_error("Conditional in if statement is not of type boolean")
+
             val thus_type = thus.type_checker
             val otherwise_type = otherwise.type_checker
+
             if thus_type != otherwise_type then add_error("Then and Else branch of if statement do not have the same type")
             thus_type
         MLpair(e1, e2) -> EPair(e1.type_checker, e2.type_checker)
         Apply(func, arg_vals) ->
             match func
-                Lambda(arg, body) ->
+                Lambda(arg, arg_type, body) ->
                     val old_scope = pget_state()
                     args_and_vals(arg, arg_vals, type_checker, True)
                     throw("test")
@@ -200,13 +198,13 @@ fun type_checker(inp: expression) : <div, exn, errors-and-warnings, polymorphic_
                     retval
                 Variable(name) ->
                     match func.type_checker
-                        EUnevaluatedFunction(arg, body) ->
-                            val old_scope = pget_state()
-                            args_and_vals(arg, arg_vals, type_checker, True)
-                            add_function("name")
-                            val retval = body.type_checker
-                            pset_state(old_scope)
-                            retval
+                        EFunc(from, to) ->
+                            val av_type = arg_vals.type_checker
+                            if av_type != from
+                            then 
+                                add_error("function input of wrong type, expected [" ++ from.show ++ "] but got [" ++ av_type.show ++ "]")
+                                return ENull
+                            return to
                         el -> 
                             add_error("variable in apply did not evaluate to function instead" ++ el.show)
                             ENull
@@ -231,9 +229,17 @@ fun type_checker(inp: expression) : <div, exn, errors-and-warnings, polymorphic_
             if(fun, .. ..)
           }
  */       
-        Letrec (arg, arg_val, body) ->
+        Letrec (arg, arg_type, arg_val, body) ->
+            println("-= entered letRec")
             val old_scope = pget_state()
-            args_and_vals(arg, arg_val, type_checker, True)
+            args_and_types(arg, arg_type)
+            if arg_val.type_checker != arg_type
+            then
+                println("adding error")
+                add_error("letrec had wrong type anotation")
+                return ENull
+            //args_and_vals(arg, arg_val, type_checker, True)
+
             val retval = body.type_checker
             pset_state(old_scope)
             retval
@@ -266,6 +272,8 @@ fun type_checker(inp: expression) : <div, exn, errors-and-warnings, polymorphic_
         Null -> ENull
         _ -> ENull
 
+
+
 fun test_interpreter (inp: expression) : <div, exn, errors-and-warnings, polymorphic_scope<expression>, console> expression
     //println("     test_interpreter: {" ++ inp.show ++ "}")
     match inp
@@ -297,9 +305,9 @@ fun test_interpreter (inp: expression) : <div, exn, errors-and-warnings, polymor
                         pset_state(old_scope)
                         //retval
                         retval
-        Lambda      (arg: patern, body: expression) -> 
+        Lambda      (arg: patern, arg_type: expression_type, body: expression) -> 
             // We want to shadow the arguments from the current scope and then substitute the current scope
-            Lambda(arg, body.test_substitute(arg.patterns_to_string))
+            Lambda(arg, arg_type, body.test_substitute(arg.patterns_to_string))
         If          (cond: expression, thus: expression, otherwise: expression) -> 
             var condition := False
             match test_interpreter(cond)
@@ -315,7 +323,7 @@ fun test_interpreter (inp: expression) : <div, exn, errors-and-warnings, polymor
             MLpair(test_interpreter(e1), test_interpreter(e2))
         Apply       (func: expression, inp_vals: expression) ->
             match func.test_interpreter
-                Lambda (args, body) ->
+                Lambda (args, arg_type, body) ->
                     val old_scope = pget_state()
                     // lets hope that this next line does actually work... it at least doesn't throw errors
                     // add_patterns_and_expressions(args, inp_vals).foreach(fn ((name, value)) { padd(name, value.test_interpreter)})
@@ -340,11 +348,11 @@ fun test_interpreter (inp: expression) : <div, exn, errors-and-warnings, polymor
 let name val body
 letrec name val body
 */
-        Letrec      (arg: patern, arg_val: expression, body: expression) ->
+        Letrec      (arg: patern, arg_type: expression_type, arg_val: expression, body: expression) ->
             val old_scope = pget_state()
             // lets hope that this next line does actually work... it at least doesn't throw errors
-            // add_patterns_and_expressions(arg, arg_val).foreach(fn ((name, value)) { padd(name, value)})
-            args_and_vals(arg, arg_val, test_interpreter, True)
+            add_patterns_and_expressions(arg, arg_val).foreach(fn ((name, value)) { padd(name, value)})
+            //args_and_vals(arg, arg_val, test_interpreter, True)
             val retval = body.test_interpreter
             pset_state(old_scope)
             retval

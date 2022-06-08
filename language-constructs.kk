@@ -9,7 +9,6 @@ https://link-springer-com.tudelft.idm.oclc.org/content/pdf/10.1007/BFb0039592.pd
 // For the add_patterns_and_expressions function
 import error-warning-handler
 
-
 type patern
     Ident (name: string)
     NullPat

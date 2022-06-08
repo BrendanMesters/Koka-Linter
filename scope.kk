@@ -30,7 +30,7 @@ fun concretely_type_based_scope_handler(fun_to_exec: () -> <polymorphic_scope<ex
                 if elem.fst() == name then return True
                 False }
             scopeState.any ( predicate)
-        fun pget(name) 
+        fun pget(name)
             match scopeState.find-maybe fn (elem: (string, closure<expression_type>)) : maybe<closure<expression_type>> {
                 if elem.fst() == name then return Just(elem.snd)
                 Nothing }
@@ -47,7 +47,7 @@ fun concretely_type_based_scope_handler(fun_to_exec: () -> <polymorphic_scope<ex
 
 
 
-fun concretely_expression_based_scope_handler(fun_to_exec: () -> <polymorphic_scope<expression>,exn|e> a2) : <exn|e> a2
+fun concretely_expression_based_scope_handler(fun_to_exec: () -> <polymorphic_scope<expression>,console,exn|e> a2) : <console,exn|e> a2
  
     var scopeState := Nil
     //var test: expression := EFalse
@@ -58,6 +58,7 @@ fun concretely_expression_based_scope_handler(fun_to_exec: () -> <polymorphic_sc
                 False }
             scopeState.any ( predicate)
         fun pget(name) 
+            // println("SCOPE - getting variable [" ++ name ++ "]") 
             match scopeState.find-maybe fn (elem: (string, closure<expression>)) : maybe<closure<expression>> {
                 if elem.fst() == name then return Just(elem.snd)
                 Nothing }

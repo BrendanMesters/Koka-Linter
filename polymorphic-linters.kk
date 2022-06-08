@@ -37,7 +37,7 @@ omitting any elements with a name present in `shadow`
 */
 
 fun test_substitute(inp: expression, shadow: list<string> = Nil): <div, exn, errors-and-warnings, polymorphic_scope<expression>, console> expression
-    //println("    test_substitute: {" ++ inp.show ++ "} \n shadow: {" ++ shadow.show ++ "}")
+    // println("test_subst with inp [" ++ inp.show ++ "]")
     match inp
         Num -> inp
         EFalse -> inp
@@ -45,15 +45,21 @@ fun test_substitute(inp: expression, shadow: list<string> = Nil): <div, exn, err
         Variable(name) ->
             if shadow.any(fn (v) v == name)
             then
+                // println("var shadowed")
                 Variable(name)
             else
                 match pget(name)
-                    Direct_value(v) -> v
+                    Direct_value(v) -> 
+                        // println("dv, " ++ show(v : expression))
+                        v
                     Actual_closure(e, clos) ->
+                        // println("ac, " ++ e.show )
                         // Save the old scope
                         val old_scope = pget_state()
                         // Apply the closure scope
-                        pset_state(clos)
+                        val new_scope = [clos, old_scope].concat
+                        pset_state(new_scope)
+                        // pset_state(clos)
 
                         // interpret the statement with the closed scope
                         val retval = e.test_substitute()
@@ -101,7 +107,8 @@ the `expression` type to the polymorphic type of the
 scope should also be provided in the form of the
 `converter` function.
 */
-fun args_and_vals(pat: patern, vals: expression, converter: (expression) -> <polymorphic_scope<a>|e> a, use_closure: bool = False) : <polymorphic_scope<a>|e> ()
+fun args_and_vals(pat: patern, vals: expression, converter: (expression) -> <console,polymorphic_scope<a>|e> a, use_closure: bool = False) : <console,polymorphic_scope<a>|e> ()
+    // println("-⋄- args_and_vals with pat: " ++ pat.show ++ "; val of " ++ vals.show ++ "; and closure being:" ++ use_closure.show)
     match (pat, vals)
         (Ident(name), _) -> 
             if use_closure
@@ -117,7 +124,7 @@ fun args_and_vals(pat: patern, vals: expression, converter: (expression) -> <pol
         _  -> ()
 
 fun args_and_types(pat: patern, typs: expression_type) : <polymorphic_scope<expression_type>, console|e> ()
-    println("in args_and_types with pat: " ++ pat.show ++ " and type:" ++ typs.show)
+    // println("in args_and_types with pat: " ++ pat.show ++ " and type:" ++ typs.show)
     match (pat, typs)
         (Ident(name), _) -> padd(name, typs)
         (NullPat, _) -> ()
@@ -137,7 +144,7 @@ fun args_and_types(pat: patern, typs: expression_type) : <polymorphic_scope<expr
 */
 // type_checker(inp:expression, expected: type, variable)
 fun type_checker(inp: expression) : <div, exn, errors-and-warnings, polymorphic_scope<expression_type>, console>  expression_type
-    println(inp.show)
+    // println(inp.show)
     match inp
         Num -> ENumber
         EFalse -> EBoolean
@@ -164,7 +171,7 @@ fun type_checker(inp: expression) : <div, exn, errors-and-warnings, polymorphic_
                         pset_state(clos)
 
                         // interpret the statement with the closed scope
-                        println("e = " ++ e.show)
+                        // println("e = " ++ e.show)
                         val retval = e.type_checker()
 
                         // Restore the old scope 
@@ -173,10 +180,10 @@ fun type_checker(inp: expression) : <div, exn, errors-and-warnings, polymorphic_
                         retval
 
         Lambda(arg, arg_type, body) -> 
-            println("in lambda in type_checker")
+            // println("in lambda in type_checker")
             args_and_types(arg, arg_type)
             val btype = body.type_checker
-            println("-= lambda return type is " ++ btype.show)
+            // println("-= lambda return type is " ++ btype.show)
             EFunc(arg_type, btype)
         If (cond, thus, otherwise) ->
             if cond.type_checker != EBoolean then add_error("Conditional in if statement is not of type boolean")
@@ -192,7 +199,7 @@ fun type_checker(inp: expression) : <div, exn, errors-and-warnings, polymorphic_
                 Lambda(arg, arg_type, body) ->
                     val old_scope = pget_state()
                     args_and_vals(arg, arg_vals, type_checker, True)
-                    throw("test")
+                    // throw("test")
                     val retval = body.type_checker
                     pset_state(old_scope)
                     retval
@@ -218,24 +225,14 @@ fun type_checker(inp: expression) : <div, exn, errors-and-warnings, polymorphic_
             pset_state(old_scope)
             retval
             
-/*
-          letrec fun = {
-            sc: a,b,c
-            let d = 12
-              sc: a,b,c,d
-              add(fun, ...)
-              sc: a,b,c,d,fun=num
-            sc: a,b,c
-            if(fun, .. ..)
-          }
- */       
+
         Letrec (arg, arg_type, arg_val, body) ->
-            println("-= entered letRec")
+            // println("-= entered letRec")
             val old_scope = pget_state()
             args_and_types(arg, arg_type)
             if arg_val.type_checker != arg_type
             then
-                println("adding error")
+                // println("adding error")
                 add_error("letrec had wrong type anotation")
                 return ENull
             //args_and_vals(arg, arg_val, type_checker, True)
@@ -275,15 +272,17 @@ fun type_checker(inp: expression) : <div, exn, errors-and-warnings, polymorphic_
 
 
 fun test_interpreter (inp: expression) : <div, exn, errors-and-warnings, polymorphic_scope<expression>, console> expression
-    //println("     test_interpreter: {" ++ inp.show ++ "}")
+    // println("     test_interpreter: {" ++ inp.show ++ "}")
     match inp
         Num (n: int) -> Num(n)
         
         EFalse -> EFalse
         ETrue -> ETrue
         Variable    (name: string) -> 
+            // println("Getting variable: "++name)
             if !pscope_contains(name) 
             then 
+                add_warning("Variable '" ++ name ++ "' was not in scope")
                 inp
                 /*
                 add_error("Variable '" ++ name ++ "' was not in scope")
@@ -291,15 +290,21 @@ fun test_interpreter (inp: expression) : <div, exn, errors-and-warnings, polymor
                 */
             else
                 match pget(name)
-                    Direct_value(v) -> v
+                    Direct_value(v) -> 
+                        // println("Variable val = " ++ show(v:expression))
+                        v
                     Actual_closure(e, clos) ->
+                        // println("in variable with actual closure")
                         // Save the old scope
                         val old_scope = pget_state()
                         // Apply the closure scope
                         pset_state(clos)
+                        // pset_state(clos)
 
                         // interpret the statement with the closed scope
-                        val retval = e.test_interpreter()
+                        val retval = e.test_substitute([name])
+
+                        // println("variable val = " ++ retval.show)
 
                         // Restore the old scope 
                         pset_state(old_scope)
@@ -307,7 +312,8 @@ fun test_interpreter (inp: expression) : <div, exn, errors-and-warnings, polymor
                         retval
         Lambda      (arg: patern, arg_type: expression_type, body: expression) -> 
             // We want to shadow the arguments from the current scope and then substitute the current scope
-            Lambda(arg, arg_type, body.test_substitute(arg.patterns_to_string))
+            // Lambda(arg, arg_type, body.test_substitute(arg.patterns_to_string))
+            inp
         If          (cond: expression, thus: expression, otherwise: expression) -> 
             var condition := False
             match test_interpreter(cond)
@@ -330,11 +336,12 @@ fun test_interpreter (inp: expression) : <div, exn, errors-and-warnings, polymor
                     args_and_vals(args, inp_vals, test_interpreter)
                     val retval = body.test_interpreter
                     pset_state(old_scope)
+                    //println("Succesfull apply with retval of: " ++ retval.show)
                     retval
                 other -> 
+                    // println("ERROR")
                     add_error("The first argument of function application was not a function but was {" ++ other.show ++ "}")
                     Null
-
         Let         (arg: patern, arg_val: expression, body: expression) ->
             val old_scope = pget_state()
             // lets hope that this next line does actually work... it at least doesn't throw errors
@@ -343,16 +350,11 @@ fun test_interpreter (inp: expression) : <div, exn, errors-and-warnings, polymor
             val retval = body.test_interpreter
             pset_state(old_scope)
             retval
-
-/*
-let name val body
-letrec name val body
-*/
         Letrec      (arg: patern, arg_type: expression_type, arg_val: expression, body: expression) ->
             val old_scope = pget_state()
             // lets hope that this next line does actually work... it at least doesn't throw errors
-            add_patterns_and_expressions(arg, arg_val).foreach(fn ((name, value)) { padd(name, value)})
-            //args_and_vals(arg, arg_val, test_interpreter, True)
+            //add_patterns_and_expressions(arg, arg_val).foreach(fn ((name, value)) { padd(name, value)})
+            args_and_vals(arg, arg_val, test_interpreter, True)
             val retval = body.test_interpreter
             pset_state(old_scope)
             retval

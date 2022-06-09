@@ -73,8 +73,14 @@ fun concretely_expression_based_scope_handler(fun_to_exec: () -> <polymorphic_sc
 
 
 
-//         -⋄= Old Code =⋄-
+/*
+         -⋄= Old Code =⋄-
 
+
+This is old legacy code and should be ignored.
+
+
+*/
 /*
 
 fun helper<a>(ls: list<(string, a)>, name: string): <exn> a

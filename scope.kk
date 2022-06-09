@@ -17,11 +17,9 @@ type closure<a>
 
 
 fun concretely_type_based_scope_handler(fun_to_exec: () -> <polymorphic_scope<expression_type>,exn|e> a) : <exn|e> a
- 
+
     var scopeState: list<(string, closure<expression_type>)> := Nil
-    //var closures: list<Either((string, a), closure<(string, a)>)>
-    //type closure<(string, a)> = (expr, List<Either((string, a), closure<string, a>)>)
-    //var test: expression := EFalse
+    
     with handler
         fun pscope_contains(name: string) 
             val predicate = fn (elem: (string, closure<expression_type>)) : bool {
@@ -47,8 +45,9 @@ fun concretely_type_based_scope_handler(fun_to_exec: () -> <polymorphic_scope<ex
 
 fun concretely_expression_based_scope_handler(fun_to_exec: () -> <polymorphic_scope<expression>,console,exn|e> a2) : <console,exn|e> a2
  
-    var scopeState := Nil
-    //var test: expression := EFalse
+    var scopeState: list<(string, closure<expression>)> := Nil
+
+
     with handler
         fun pscope_contains(name: string) 
             val predicate = fn (elem: (string, closure<expression>)) : bool {

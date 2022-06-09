@@ -235,35 +235,26 @@ fun test_interpreter (inp: expression) : <div, exn, errors-and-warnings, polymor
         Variable    (name: string) -> 
             if !pscope_contains(name) 
             then 
-                // add_warning("Variable '" ++ name ++ "' was not in scope")
-                // inp
                 add_error("Variable '" ++ name ++ "' was not in scope")
                 Null
             else
                 match pget(name)
                     Direct_value(v) -> 
-                        // println("Variable val = " ++ show(v:expression))
                         v
                     Actual_closure(e, clos) ->
-                        // println("in variable with actual closure")
                         // Save the old scope
                         val old_scope = pget_state()
+
                         // Apply the closure scope
                         pset_state(clos)
-                        // pset_state(clos)
 
                         // interpret the statement with the closed scope
                         val retval = e.test_substitute([name])
-
-                        // println("variable val = " ++ retval.show)
-
+                        
                         // Restore the old scope 
                         pset_state(old_scope)
-                        //retval
                         retval
         Lambda      (arg: patern, arg_type: expression_type, body: expression) -> 
-            // We want to shadow the arguments from the current scope and then substitute the current scope
-            // Lambda(arg, arg_type, body.test_substitute(arg.patterns_to_string))
             inp
         If          (cond: expression, thus: expression, otherwise: expression) -> 
             var condition := False
@@ -271,40 +262,30 @@ fun test_interpreter (inp: expression) : <div, exn, errors-and-warnings, polymor
                 EFalse -> condition := False
                 ETrue -> condition := True
             if condition then thus.test_interpreter else otherwise.test_interpreter
-            /*
-            val th = interpreter(thus)
-            val oth = interpreter(otherwise)
-            if condition then th else oth
-            */
         MLpair      (e1: expression, e2: expression) -> 
             MLpair(test_interpreter(e1), test_interpreter(e2))
         Apply       (func: expression, inp_vals: expression) ->
             match func.test_interpreter
                 Lambda (args, arg_type, body) ->
                     val old_scope = pget_state()
-                    // lets hope that this next line does actually work... it at least doesn't throw errors
-                    // add_patterns_and_expressions(args, inp_vals).foreach(fn ((name, value)) { padd(name, value.test_interpreter)})
+
                     args_and_vals(args, inp_vals, test_interpreter)
                     val retval = body.test_interpreter
+
                     pset_state(old_scope)
-                    //println("Succesfull apply with retval of: " ++ retval.show)
+                    
                     retval
                 other -> 
-                    // println("ERROR")
                     add_error("The first argument of function application was not a function but was {" ++ other.show ++ "}")
                     Null
         Let         (arg: patern, arg_val: expression, body: expression) ->
             val old_scope = pget_state()
-            // lets hope that this next line does actually work... it at least doesn't throw errors
-            // add_patterns_and_expressions(arg, arg_val).foreach(fn ((name, value)) { padd(name, value.test_interpreter)})
             args_and_vals(arg, arg_val, test_interpreter)
             val retval = body.test_interpreter
             pset_state(old_scope)
             retval
         Letrec      (arg: patern, arg_type: expression_type, arg_val: expression, body: expression) ->
             val old_scope = pget_state()
-            // lets hope that this next line does actually work... it at least doesn't throw errors
-            //add_patterns_and_expressions(arg, arg_val).foreach(fn ((name, value)) { padd(name, value)})
             args_and_vals(arg, arg_val, test_interpreter, True)
             val retval = body.test_interpreter
             pset_state(old_scope)
@@ -321,11 +302,6 @@ fun test_interpreter (inp: expression) : <div, exn, errors-and-warnings, polymor
                 (Null, _) -> Null
                 (_, Null) -> Null
                 _ -> EFalse
-
-        /*
-        Expantion of the expression type to allow number operations, as this isn't possible when
-        following the abstract data types laid out in the origional paper
-        */
         EMult        (e1: expression, e2: expression) ->
             match (e1.test_interpreter, e2.test_interpreter)
                 (Num(n1), Num(n2)) -> Num(n1 * n2)

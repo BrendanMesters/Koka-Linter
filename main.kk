@@ -28,31 +28,41 @@ fun main(): <console, div, exn> ()
 
     EAdd(Null, Num(12)).run_prog
 
-    println("\n\n«⋄» fact «⋄»")
+    println("\n\n  «⋄» fact «⋄»")
     prog_fact.run_prog
 
-    println("\n\n«⋄» lex vs dyn «⋄»")
+    println("\n\n  «⋄» lex vs dyn «⋄»")
     prog_lex_vs_dyn.run_prog
 
-    println("\n\n«⋄» alpha reduction «⋄»")
+    println("\n\n  «⋄» alpha reduction «⋄»")
     prog_alpha_reduction.run_prog
 
-    println("\n\n«⋄» is even «⋄»")
+    println("\n\n  «⋄» is even «⋄»")
     prog_is_even.run_prog
+
+    println("\n\n\n\n    -⋄= The Following code is SUPPOSED to throw errors =⋄-")
+
+    println("\n\n  «⋄» Erronious program #1 «⋄»")
+    prog_error_one.run_prog
+
+
+
 
 fun run_prog(program: expression, what-to-run: (bool, bool) = (True, True)): <console, div, exn> ()
     with errors_and_warnings_handler
     if (what-to-run.fst)
     //    -= Interpreter =-    //
     then
+        print("Interp:      ")
         with concretely_expression_based_scope_handler
-        test_interpreter(program).printexpr
+        test_interpreter(program).show.println
     if (what-to-run.snd)
     //    -= Type checker =-    //
     then
+        print("Type check:  ")
         with concretely_type_based_scope_handler
         type_checker(program).show.println
-
+    println("-----------------------------------")
     print_errors_and_warnings(get_errors_and_warnings())
     println("done")
         
@@ -72,6 +82,14 @@ the type checker that I created for mini-ml
 
 */
 
+
+
+//        «⋄» Correct Programs «⋄»
+
+// Programs that are supposed to compile and
+// give an output without throwing any errors
+// or warnings.
+// -----============================-----
 
 // Calculates the factorial of the 
 // number in the last apply.
@@ -150,6 +168,57 @@ val prog_is_even = Letrec(
       Apply(Variable("is_even"), Num(22))
     )
  
+
+
+
+
+
+
+//    «⋄» (Intentionally) Erronious Programs «⋄»
+
+// The following programs have been created to have errors
+// by design. Since our type checker and interpreter should
+// throw errors on faulty code it is also important to make
+// sure that this happens consistently.
+
+// -----============================-----
+
+val prog_error_one = Apply(
+  Lambda(
+    Ident("f"), EFunc(ENumber, EBoolean),
+    Apply(Variable("f"), Num(42069))
+  ),
+  If(
+    EFalse,
+    Lambda(
+      Ident("x"), ENumber,
+      Equals(Variable("x"), Num(69420))
+    ),
+    Letrec(
+      Ident("is_even"), EFunc(ENumber, EBoolean),
+      Lambda(
+        Ident("x"), ENumber,
+        If (Equals(Variable("x"), Num(0)),
+          ETrue,
+          If (Equals(Variable("x"), Num(1)),
+            EFalse,
+            Apply(Variable("is_even"), ESub(Variable("x"), Num(2)))
+
+          )
+        )
+      ),
+      Variable("is_even")
+    )
+  
+  )
+
+)
+
+
+
+
+
+
 /*
 
       -»⋄ Failed programs ⋄«-

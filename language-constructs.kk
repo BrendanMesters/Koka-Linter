@@ -9,10 +9,13 @@ https://link-springer-com.tudelft.idm.oclc.org/content/pdf/10.1007/BFb0039592.pd
 // For the add_patterns_and_expressions function
 import error-warning-handler
 
+
+
 type patern
     Ident (name: string)
     NullPat
     Patpair (p1: patern, p2: patern)
+
 
 type expression
     Num (n: int)
@@ -25,22 +28,12 @@ type expression
     Apply       (e1: expression, e2: expression)
     Let         (arg: patern, arg_val: expression, body: expression)
     Letrec      (arg: patern, arg_type: expression_type, arg_val: expression, body: expression)
-
-    /*
-    Expantion of the expression type to allow number operations, as this isn't possible when
-    following the abstract data types laid out in the origional paper
-    */
     Equals       (e1: expression, e2: expression)
     EMult        (e1: expression, e2: expression)
     EAdd         (e1: expression, e2: expression)
     ESub         (e1: expression, e2: expression)
-
-    // Binds a v
-    // Closure        (exp: expression, scope: list<...>)
-    
-    // -= Error Value =-
+//      -= Null is an Error Value =-
     Null
-
 
 
 type expression_type
@@ -50,6 +43,8 @@ type expression_type
     EFunc(from: expression_type, to: expression_type)
     // error value
     ENull 
+
+
 
 
 fun show(pat: patern) : total string
@@ -80,6 +75,7 @@ fun show(exp: expression) : total string
         Null                                         -> "Null expression - This is an Error Value"
         _ -> "Not a valid expression, note this should never be reached and is just here to catch possibly otherwise very obscure bugs that might be introduced in the future :-D"
 
+
 fun show(exp: expression_type) : total string
     match exp
         ENumber -> "Expression type Number"
@@ -87,6 +83,8 @@ fun show(exp: expression_type) : total string
         ENull -> "Expression error value ENull"
         EFunc(from, to) -> "Expression function type, from type [" ++ from.show ++ "] to type [" ++ to.show ++ "]"
         EPair(e1, e2) -> "Expression pair of {" ++ e1.show ++ "} and {" ++ e2.show ++ "}"
+
+
 
 fun (==)(e1:expression_type, e2:expression_type) : <div> bool
     match (e1, e2)
@@ -101,13 +99,6 @@ fun (==)(e1:expression_type, e2:expression_type) : <div> bool
 fun (!=)(e1: expression_type, e2: expression_type) : <div> bool
     !(e1 == e2)
 
-
-fun printexpr(exp: expression) : console ()
-    println("Expression print: " ++ exp.show())
-
-
-
-
 fun patterns_to_string(args: patern) : <div> list<string>
     match args
         Ident(name) -> [name]
@@ -115,6 +106,10 @@ fun patterns_to_string(args: patern) : <div> list<string>
         Patpair(p1, p2) -> [p1.patterns_to_string, p2.patterns_to_string].concat()
 
 
+
+//      -=⋄ Old unused stuff ⋄=-
+
+/*
 fun add_patterns_and_expressions(pat: patern, expr: expression) : <div,errors-and-warnings> list<(string, expression)>
     match (pat, expr)
         (Ident (name), value) ->  [(name, value)]
@@ -126,3 +121,4 @@ fun add_patterns_and_expressions(pat: patern, expr: expression) : <div,errors-an
         _ -> 
             add_error("Type mismatch during variable binding, pattern was: {" ++ pat.show ++ "} and value was {" ++ expr.show ++ "}")
             []
+*/

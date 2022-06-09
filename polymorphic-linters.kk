@@ -2,23 +2,6 @@ import scope
 import language-constructs
 import error-warning-handler
 
-/*
-
-
-CURRENT TODO!!!!
-
-Lambda and application in the type_checker still need
-to be implemented.
-
-Furthermore I still need to generalize my code for both 
-analyzers and interpreters with the use of effect handlers.
-BEFORE I do that however I should probably identify
-the similarities between the two applications and reason
-about their inherrent need or if this is just a coincidence
-since I'm only using TWO applications currently.
-
-*/
-
 
 /*
 
@@ -37,7 +20,6 @@ omitting any elements with a name present in `shadow`
 */
 
 fun test_substitute(inp: expression, shadow: list<string> = Nil): <div, exn, errors-and-warnings, polymorphic_scope<expression>, console> expression
-    // println("test_subst with inp [" ++ inp.show ++ "]")
     match inp
         Num -> inp
         EFalse -> inp
@@ -45,28 +27,23 @@ fun test_substitute(inp: expression, shadow: list<string> = Nil): <div, exn, err
         Variable(name) ->
             if shadow.any(fn (v) v == name)
             then
-                // println("var shadowed")
                 Variable(name)
             else
                 match pget(name)
-                    Direct_value(v) -> 
-                        // println("dv, " ++ show(v : expression))
-                        v
+                    Direct_value(v) -> v
                     Actual_closure(e, clos) ->
-                        // println("ac, " ++ e.show )
                         // Save the old scope
                         val old_scope = pget_state()
+
                         // Apply the closure scope
                         val new_scope = [clos, old_scope].concat
                         pset_state(new_scope)
-                        // pset_state(clos)
 
                         // interpret the statement with the closed scope
                         val retval = e.test_substitute()
 
                         // Restore the old scope 
                         pset_state(old_scope)
-                        //retval
                         retval
         Lambda (arg, arg_type, body) ->
             val nbody = test_substitute(body, [arg.patterns_to_string, shadow].concat)
@@ -86,7 +63,6 @@ fun test_substitute(inp: expression, shadow: list<string> = Nil): <div, exn, err
         EMult(e1, e2) -> EMult(e1.test_substitute(shadow), e2.test_substitute(shadow))
         EAdd(e1, e2) -> EAdd(e1.test_substitute(shadow), e2.test_substitute(shadow))
         ESub(e1, e2) -> ESub(e1.test_substitute(shadow), e2.test_substitute(shadow))
-        // TODO Think of whether or not substitution should happen under closure
         Null -> inp
         _ -> Null
  
@@ -108,7 +84,6 @@ scope should also be provided in the form of the
 `converter` function.
 */
 fun args_and_vals(pat: patern, vals: expression, converter: (expression) -> <console,polymorphic_scope<a>|e> a, use_closure: bool = False) : <console,polymorphic_scope<a>|e> ()
-    // println("-⋄- args_and_vals with pat: " ++ pat.show ++ "; val of " ++ vals.show ++ "; and closure being:" ++ use_closure.show)
     match (pat, vals)
         (Ident(name), _) -> 
             if use_closure
@@ -124,7 +99,6 @@ fun args_and_vals(pat: patern, vals: expression, converter: (expression) -> <con
         _  -> ()
 
 fun args_and_types(pat: patern, typs: expression_type) : <polymorphic_scope<expression_type>, console|e> ()
-    // println("in args_and_types with pat: " ++ pat.show ++ " and type:" ++ typs.show)
     match (pat, typs)
         (Ident(name), _) -> padd(name, typs)
         (NullPat, _) -> ()
@@ -142,25 +116,16 @@ fun args_and_types(pat: patern, typs: expression_type) : <polymorphic_scope<expr
     code analysers as well as the interpreter.
 
 */
-// type_checker(inp:expression, expected: type, variable)
 fun type_checker(inp: expression) : <div, exn, errors-and-warnings, polymorphic_scope<expression_type>, console>  expression_type
-    // println(inp.show)
     match inp
         Num -> ENumber
         EFalse -> EBoolean
         ETrue -> EBoolean
         Variable(name) -> 
-            //First check for type unsure functions
-
-
-            //Then check for elements in scope
             if !pscope_contains(name) 
             then 
-                throw("unbound variable '" ++ name ++ "' found.")
-                /*
-                add_error("Variable '" ++ name ++ "' was not in scope")
-                Null
-                */
+                add_error("Typechecker: Variable '" ++ name ++ "' was not in scope")
+                ENull
             else
                 match pget(name)
                     Direct_value(v) -> v
@@ -180,18 +145,14 @@ fun type_checker(inp: expression) : <div, exn, errors-and-warnings, polymorphic_
                         retval
 
         Lambda(arg, arg_type, body) -> 
-            // println("in lambda in type_checker")
             args_and_types(arg, arg_type)
             val btype = body.type_checker
-            // println("-= lambda return type is " ++ btype.show)
             EFunc(arg_type, btype)
         If (cond, thus, otherwise) ->
-            if cond.type_checker != EBoolean then add_error("Conditional in if statement is not of type boolean")
-
+            if cond.type_checker != EBoolean then add_error("Typechecker: Conditional in if statement is not of type boolean")
             val thus_type = thus.type_checker
             val otherwise_type = otherwise.type_checker
-
-            if thus_type != otherwise_type then add_error("Then and Else branch of if statement do not have the same type")
+            if thus_type != otherwise_type then add_error("Typechecker: Then and Else branch of if statement do not have the same type")
             thus_type
         MLpair(e1, e2) -> EPair(e1.type_checker, e2.type_checker)
         Apply(func, arg_vals) ->
@@ -199,7 +160,6 @@ fun type_checker(inp: expression) : <div, exn, errors-and-warnings, polymorphic_
                 Lambda(arg, arg_type, body) ->
                     val old_scope = pget_state()
                     args_and_vals(arg, arg_vals, type_checker, True)
-                    // throw("test")
                     val retval = body.type_checker
                     pset_state(old_scope)
                     retval
@@ -209,14 +169,14 @@ fun type_checker(inp: expression) : <div, exn, errors-and-warnings, polymorphic_
                             val av_type = arg_vals.type_checker
                             if av_type != from
                             then 
-                                add_error("function input of wrong type, expected [" ++ from.show ++ "] but got [" ++ av_type.show ++ "]")
+                                add_error("Typechecker: function input of wrong type, expected [" ++ from.show ++ "] but got [" ++ av_type.show ++ "]")
                                 return ENull
                             return to
                         el -> 
-                            add_error("variable in apply did not evaluate to function instead" ++ el.show)
+                            add_error("Typechecker: variable in apply did not evaluate to function instead" ++ el.show)
                             ENull
                 el -> 
-                    add_error("variable in apply did not evaluate to function instead" ++ el.show)
+                    add_error("Typechecker: variable in apply did not evaluate to function instead" ++ el.show)
                     ENull
         Let (arg, arg_val, body) ->
             val old_scope = pget_state()
@@ -227,16 +187,12 @@ fun type_checker(inp: expression) : <div, exn, errors-and-warnings, polymorphic_
             
 
         Letrec (arg, arg_type, arg_val, body) ->
-            // println("-= entered letRec")
             val old_scope = pget_state()
             args_and_types(arg, arg_type)
             if arg_val.type_checker != arg_type
             then
-                // println("adding error")
-                add_error("letrec had wrong type anotation")
+                add_error("Typechecker: letrec had wrong type anotation")
                 return ENull
-            //args_and_vals(arg, arg_val, type_checker, True)
-
             val retval = body.type_checker
             pset_state(old_scope)
             retval
@@ -246,25 +202,25 @@ fun type_checker(inp: expression) : <div, exn, errors-and-warnings, polymorphic_
             then
                 EBoolean
             else
-                add_error("Equals was encountered with values of differing types")
+                add_error("Typechecker: Equals was encountered with values of differing types")
                 ENull
         EMult (e1, e2) ->
             match (e1.type_checker, e2.type_checker)
                 (ENumber, ENumber) -> ENumber
                 (a, b) -> 
-                    add_error("EMult found with incorrect types, namely {" ++ a.show ++"} and {" ++ b.show ++"}")
+                    add_error("Typechecker: EMult found with incorrect types, namely {" ++ a.show ++"} and {" ++ b.show ++"}")
                     ENull
         EAdd (e1, e2) ->
             match (e1.type_checker, e2.type_checker)
                 (ENumber, ENumber) -> ENumber
                 (a, b) -> 
-                    add_error("EAdd found with incorrect types, namely {" ++ a.show ++"} and {" ++ b.show ++"}")
+                    add_error("Typechecker: EAdd found with incorrect types, namely {" ++ a.show ++"} and {" ++ b.show ++"}")
                     ENull
         ESub (e1, e2) ->
             match (e1.type_checker, e2.type_checker)
                 (ENumber, ENumber) -> ENumber
                 (a, b) -> 
-                    add_error("ESub found with incorrect types, namely {" ++ a.show ++"} and {" ++ b.show ++"}")
+                    add_error("Typechecker: ESub found with incorrect types, namely {" ++ a.show ++"} and {" ++ b.show ++"}")
                     ENull
         Null -> ENull
         _ -> ENull
@@ -272,22 +228,17 @@ fun type_checker(inp: expression) : <div, exn, errors-and-warnings, polymorphic_
 
 
 fun test_interpreter (inp: expression) : <div, exn, errors-and-warnings, polymorphic_scope<expression>, console> expression
-    // println("     test_interpreter: {" ++ inp.show ++ "}")
     match inp
         Num (n: int) -> Num(n)
-        
         EFalse -> EFalse
         ETrue -> ETrue
         Variable    (name: string) -> 
-            // println("Getting variable: "++name)
             if !pscope_contains(name) 
             then 
-                add_warning("Variable '" ++ name ++ "' was not in scope")
-                inp
-                /*
+                // add_warning("Variable '" ++ name ++ "' was not in scope")
+                // inp
                 add_error("Variable '" ++ name ++ "' was not in scope")
                 Null
-                */
             else
                 match pget(name)
                     Direct_value(v) -> 

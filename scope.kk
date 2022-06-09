@@ -1,6 +1,4 @@
-
-
-
+//imports
 import language-constructs
 
 
@@ -74,37 +72,10 @@ fun concretely_expression_based_scope_handler(fun_to_exec: () -> <polymorphic_sc
     fun_to_exec()
 
 
+
+//         -⋄= Old Code =⋄-
+
 /*
-
-fun polymorphic_scope_handeler<a>( fun_to_exec: () -> <polymorphic_scope<a>,exn|e> a , init_val : list<(string, a)> = Nil) : <exn|e> a
-    
-    var scopeState: list<(string, a)> := init_val
-    //var test: expression := EFalse
-    with handler
-        fun pscope_contains(name: string) 
-            val predicate = fn (elem: (string, a)) : bool {
-                if elem.fst() == name then return True
-                False }
-            scopeState.any ( predicate)
-        fun pget(name) 
-            scopeState.helper(name)
-            /*
-            match scopeState.find-maybe fn (elem: (string, a)) : maybe<a> {
-                if elem.fst() == name then return Just(elem.snd)
-                Nothing }
-                Just(v) -> return v
-                Nothing -> throw("Variable \'" ++ name ++ "\' not in scope.")
-                */
-            
-            /*scopeState.find-maybe fn (elem: (string, expression)) : exn expression
-                if elem.fst() == name then return elem.snd
-                throw("Variable \'" ++ name ++ "\' not in scope.")*/
-        fun padd(name: string, elem: a) scopeState := Cons((name, elem), scopeState)
-        fun pget_state() return scopeState
-        fun pset_state(newState) scopeState := newState
-    fun_to_exec()
-
-*/
 
 fun helper<a>(ls: list<(string, a)>, name: string): <exn> a
     match ls 
@@ -179,3 +150,5 @@ fun simple_scope_handler (fun_to_exec: () -> <simple_scope,exn|e> a, init_val: l
         fun get_internal_state() scopeState
         fun set_internal_state(state) scopeState := state
     fun_to_exec()
+
+*/

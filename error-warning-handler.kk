@@ -7,7 +7,7 @@ effect errors-and-warnings
     fun add_error(error: string): ()
     fun add_warning(warning: string): ()
     fun get_errors_and_warnings(): (list<string>, list<string>)
-//    fun set_errors_and_warnings(inp: (list<string>, list<string>)): ()
+
 
 /* 
 The `exn` handler is requested for both but not really used, as otherwise I get the error:
@@ -21,9 +21,7 @@ fun errors_and_warnings_handler(fun_to_exec : () -> <errors-and-warnings,exn|e> 
         fun add_error(error) errors := Cons(error, errors)
         fun add_warning(warning) warnings := Cons(warning, warnings)
         fun get_errors_and_warnings() (errors, warnings)
-//        fun set_errors_and_warnings(ls) //(errors, warnings) := ls
-//            errors := ls.fst
-//            warnings := ls.snd
+
     fun_to_exec()
 
 

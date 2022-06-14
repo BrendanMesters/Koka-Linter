@@ -18,7 +18,7 @@ import language-constructs
 // Effect Handlers
 import scope
 import error-warning-handler
-
+import type-functional-effect
 
 // Running Code
 import complex-linter

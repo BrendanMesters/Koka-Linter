@@ -124,7 +124,7 @@ fun type_checker(inp: expression) : <div, exn, errors-and-warnings, polymorphic_
         Variable(name) -> 
             if !pscope_contains(name) 
             then 
-                add_error("Typechecker: Variable '" ++ name ++ "' was not in scope")
+                add_error("Variable '" ++ name ++ "' was not in scope")
                 ENull
             else
                 match pget(name)
@@ -144,7 +144,7 @@ fun type_checker(inp: expression) : <div, exn, errors-and-warnings, polymorphic_
                         //retval
                         retval
 
-        Lambda(arg, arg_type, body) -> 
+        Lambda(arg, arg_type, body) ->
             args_and_types(arg, arg_type)
             val btype = body.type_checker
             EFunc(arg_type, btype)
@@ -158,6 +158,11 @@ fun type_checker(inp: expression) : <div, exn, errors-and-warnings, polymorphic_
         Apply(func, arg_vals) ->
             match func
                 Lambda(arg, arg_type, body) ->
+                    val actual_arg_type = arg_vals.type_checker
+                    if actual_arg_type != arg_type
+                    then 
+                        add_error("Provided function argument type unequal to actual argument type, expected [" ++ arg_type.show ++ "] but got [" ++ actual_arg_type.show ++ "]")
+                        return ENull
                     val old_scope = pget_state()
                     args_and_vals(arg, arg_vals, type_checker, True)
                     val retval = body.type_checker
@@ -239,19 +244,11 @@ fun test_interpreter (inp: expression) : <div, exn, errors-and-warnings, polymor
                 Null
             else
                 match pget(name)
-                    Direct_value(v) -> 
-                        v
+                    Direct_value(v) -> v
                     Actual_closure(e, clos) ->
-                        // Save the old scope
                         val old_scope = pget_state()
-
-                        // Apply the closure scope
                         pset_state(clos)
-
-                        // interpret the statement with the closed scope
                         val retval = e.test_substitute([name])
-                        
-                        // Restore the old scope 
                         pset_state(old_scope)
                         retval
         Lambda      (arg: patern, arg_type: expression_type, body: expression) -> 

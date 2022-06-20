@@ -1,7 +1,7 @@
 # The effect of EHOP on the writing of program analysis tools
 
 
-Welcome   0/ 
+Welcome, this is the github repository for the Research Project of Brendan Mesters, in the year 2022.
 
 This is the github page for the research project of Brendan Mesters.
 This reserach project aims to find out if the new proposed programming 

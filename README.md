@@ -3,6 +3,8 @@
 
 Welcome, this is the github repository for the Research Project of Brendan Mesters, in the year 2022.
 
+Paper can be found [here](http://resolver.tudelft.nl/uuid:f5621567-8d0e-42ad-918f-45d927314302)
+
 This is the github page for the research project of Brendan Mesters.
 This reserach project aims to find out if the new proposed programming 
 paradigm of Effect Handler Oriented Programming (EHOP) is usefull for
